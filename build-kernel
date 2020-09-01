@@ -33,9 +33,10 @@ DATE=$(date +"%d.%m.%y")
 HOME="/drone/src/"
 OUT_DIR=out/
 VERSION="IMMENSiTY-AUTO-RAPHAEL-${TYPE}-${DRONE_BUILD_NUMBER}-${DATE}"
-AUTHOR=git log -1 --format="%an"
-COMMIT=git log -1 --format="%h / %s"
-REF=echo | grep -Eo "[^ /]+\$"
+BRANCH=`git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'`
+REF=`echo "$BRANCH" | grep -Eo "[^ /]+\$"`
+AUTHOR=`git log $BRANCH -1 --format="%an"`
+COMMIT=`git log $BRANCH -1 --format="%h / %s"`
 MESSAGE="$AUTHOR@$REF: $COMMIT"
 # Export Zip name
 export ZIPNAME="${VERSION}.zip"
@@ -53,10 +54,10 @@ Build: <code>${TYPE}</code>
 Device: <code>XiaoMi Redmi K20 Pro (raphael)</code>
 Compiler: <code>${COMPILER}</code>
 Branch: <code>$(git rev-parse --abbrev-ref HEAD)</code>
+Commit: <code>$MESSAGE</code>
 <i>Build started on Drone Cloud...</i>
 Check the build status here: https://cloud.drone.io/UtsavBalar1231/kernel_xiaomi_raphael/${DRONE_BUILD_NUMBER}" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
 curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="Build started for revision ${DRONE_BUILD_NUMBER}" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
-curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d parse_mode=HTML -d chat_id=${CI_CHANNEL_ID} -d text=$MESSAGE >/dev/null 2>/dev/null
 
 # Make defconfig
 make ARCH=arm64 \
@@ -138,7 +139,6 @@ END=$(date +"%s")
 DIFF=$(( END - START))
 
 # Import Anykernel3 folder
-cp -r ${HOME}/anykernel $(pwd)/
 cp $(pwd)/${OUT_DIR}/arch/arm64/boot/Image.gz-dtb $(pwd)/anykernel/
 cp $(pwd)/${OUT_DIR}/arch/arm64/boot/dtbo.img $(pwd)/anykernel/
 
@@ -156,5 +156,3 @@ cd $(pwd)
 
 # Cleanup
 rm -fr anykernel/
-rm ${OUT_DIR}/
-
