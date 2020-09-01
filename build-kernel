@@ -19,7 +19,13 @@
 cd /drone/src/
 
 # Export Cross Compiler name
-export COMPILER="BenzoClang-12.0"
+if [[ "$@" =~ "benzoclang"* ]]; then
+	export COMPILER="BenzoClang-12.0"
+elif [[ "$@" =~ "proton"* ]]; then
+	export COMPILER="ProtonClang-12.0"
+else
+	export COMPILER="ProtonClang-12.0"
+fi
 # Export Build username
 export KBUILD_BUILD_USER="UtsavTheCunt"
 # Enviromental Variables
@@ -59,23 +65,58 @@ make O=${OUT_DIR} \
 cd ../
 
 # Set compiler PATH
-PATH=${HOME}/clang/bin/:${HOME}/arm64-gcc/bin/:${HOME}/arm32-gcc/bin/:$PATH
+if [[ "$@" =~ "benzoclang"* ]]; then
+	PATH=${HOME}/clang/bin/:${HOME}/arm64-gcc/bin/:${HOME}/arm32-gcc/bin/:$PATH
+elif [[ "$@" =~ "proton"* ]]; then
+	PATH=${HOME}/clang/bin/:$PATH
+else
+	PATH=${HOME}/clang/bin/:$PATH
+fi
 
 START=$(date +"%s")
 
-make ARCH=arm64 \
-	O=${OUT_DIR} \
-	CC="ccache clang" \
-	LD="ld.lld" \
-	AR="llvm-ar" \
-	NM="llvm-nm" \
-	OBJCOPY="llvm-objcopy" \
-	OBJDUMP="llvm-objdump" \
-	STRIP="llvm-strip" \
-	CLANG_TRIPLE="aarch64-linux-gnu-" \
-	CROSS_COMPILE="aarch64-linux-android-" \
-	CROSS_COMPILE_ARM32="arm-linux-androideabi-" \
-	-j${KEBABS}
+if [[ "$@" =~ "benzoclang"* ]]; then
+	make ARCH=arm64 \
+		O=${OUT_DIR} \
+		CC="ccache clang" \
+		LD="ld.lld" \
+		AR="llvm-ar" \
+		NM="llvm-nm" \
+		OBJCOPY="llvm-objcopy" \
+		OBJDUMP="llvm-objdump" \
+		STRIP="llvm-strip" \
+		CLANG_TRIPLE="aarch64-linux-gnu-" \
+		CROSS_COMPILE="aarch64-linux-android-" \
+		CROSS_COMPILE_ARM32="arm-linux-androideabi-" \
+		-j${KEBABS}
+elif [[ "$@" =~ "proton"* ]]; then
+	make ARCH=arm64 \
+		O=${OUT_DIR} \
+		CC="ccache clang" \
+		LD="ld.lld" \
+		AR="llvm-ar" \
+		NM="llvm-nm" \
+		OBJCOPY="llvm-objcopy" \
+		OBJDUMP="llvm-objdump" \
+		STRIP="llvm-strip" \
+		CLANG_TRIPLE="aarch64-linux-gnu-" \
+		CROSS_COMPILE="aarch64-linux-gnu-" \
+		CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
+		-j${KEBABS}
+else
+	make ARCH=arm64 \
+		O=${OUT_DIR} \
+		CC="ccache clang" \
+		LD="ld.lld" \
+		AR="llvm-ar" \
+		NM="llvm-nm" \
+		OBJCOPY="llvm-objcopy" \
+		OBJDUMP="llvm-objdump" \
+		STRIP="llvm-strip" \
+		CLANG_TRIPLE="aarch64-linux-gnu-" \
+		CROSS_COMPILE="aarch64-linux-android-" \
+		CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
+		-j${KEBABS}
 
 END=$(date +"%s")
 DIFF=$(( END - START))
