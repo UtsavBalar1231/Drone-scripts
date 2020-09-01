@@ -32,7 +32,7 @@ export KBUILD_BUILD_USER="UtsavTheCunt"
 DATE=$(date +"%d.%m.%y")
 HOME="/drone/src/"
 OUT_DIR=out/
-VERSION="IMMENSiTY-AUTO-RAPHAEL-${TYPE}-${DRONE_BUILD_NUMBER}"
+VERSION="IMMENSiTY-AUTO-RAPHAEL-${TYPE}-${DRONE_BUILD_NUMBER}-${DATE}"
 # Export Zip name
 export ZIPNAME="${VERSION}.zip"
 
