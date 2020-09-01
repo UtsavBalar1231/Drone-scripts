@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2199
+# shellcheck source=/dev/null
+#
+# Copyright (c) 2020 UtsavBalar1231 <utsavbalar1231@gmail.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+cd /drone/src/
+
+# Export Cross Compiler name
+export COMPILER="BenzoClang-12.0"
+# Export Build username
+export KBUILD_BUILD_USER="UtsavTheCunt"
+# Enviromental Variables
+DATE=$(date +"%d.%m.%y")
+HOME="/drone/src/"
+OUT_DIR=out/
+VERSION="IMMENSiTY-AUTO-RAPHAEL-${TYPE}-${DRONE_BUILD_NUMBER}"
+# Export Zip name
+export ZIPNAME="${VERSION}.zip"
+
+# How much kebabs we need? Kanged from @raphielscape :)
+if [[ -z "${KEBABS}" ]]; then
+	COUNT="$(grep -c '^processor' /proc/cpuinfo)"
+	export KEBABS="$((COUNT * 2))"
+fi
+
+# Make defconfig
+make ARCH=arm64 \
+	O=${OUT_DIR} \
+	raphael_defconfig \
+	-j${KEBABS}
+
+# Enable LLD
+scripts/config --file ${OUT_DIR}/.config \
+	-d LTO \
+	-d LTO_CLANG \
+	-e SHADOW_CALL_STACK \
+	-e TOOLS_SUPPORT_RELR \
+	-e LD_LLD
+
+# Make olddefconfig
+cd ${OUT_DIR}
+make O=${OUT_DIR} \
+	ARCH=arm64 \
+	olddefconfig \
+	-j${KEBABS}
+cd ../
+
+# Set compiler PATH
+PATH=${HOME}/clang/bin/:${HOME}/arm64-gcc/bin/:${HOME}/arm32-gcc/bin/:$PATH
+
+START=$(date +"%s")
+
+make ARCH=arm64 \
+	O=${OUT_DIR} \
+	CC="ccache clang" \
+	LD="ld.lld" \
+	AR="llvm-ar" \
+	NM="llvm-nm" \
+	OBJCOPY="llvm-objcopy" \
+	OBJDUMP="llvm-objdump" \
+	STRIP="llvm-strip" \
+	CLANG_TRIPLE="aarch64-linux-gnu-" \
+	CROSS_COMPILE="aarch64-linux-android-" \
+	CROSS_COMPILE_ARM32="arm-linux-androideabi-" \
+	-j${KEBABS}
+
+END=$(date +"%s")
+DIFF=$(( END - START))
+
+# Import Anykernel3 folder
+cp -r ${HOME}/anykernel $(pwd)/
+cp $(pwd)/${OUT_DIR}/arch/arm64/boot/Image.gz-dtb $(pwd)/anykernel/
+cp $(pwd)/${OUT_DIR}/arch/arm64/boot/dtbo.img $(pwd)/anykernel/
+
+cd anykernel
+zip -r9 ${ZIPNAME} *
+CHECKER=$(ls -l ${ZIPNAME} | awk '{print $5}')
+if (($((CHECKER / 1048576)) > 5)); then
+	curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="Kernel compiled successfully in $((DIFF / 60)) minute(s) and $((DIFF % 60)) seconds for Raphael" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
+	curl -F chat_id="${CI_CHANNEL_ID}" -F document=@"$(pwd)/${ZIPNAME}" https://api.telegram.org/bot${BOT_API_KEY}/sendDocument
+else
+	curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="Error in build!!" -d chat_id=${CI_CHANNEL_ID}
+	exit 1;
+fi
+cd $(pwd)
+
+# Cleanup
+rm -fr anykernel/
+rm ${OUT_DIR}/
+
