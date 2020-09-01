@@ -42,6 +42,17 @@ if [[ -z "${KEBABS}" ]]; then
 	export KEBABS="$((COUNT * 2))"
 fi
 
+# Post to CI channel
+curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/SendAnimation -d animation=https://thumbs.gfycat.com/TidyOccasionalIncatern-size_restricted.gif -d chat_id=${CI_CHANNEL_ID}
+curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="<code>IMMENSiTY KERNAL</code>
+FOD: <code>${TYPE}</code>
+Device: <code>XiaoMi Redmi K20 Pro (raphael)</code>
+Compiler: <code>${COMPILER}</code>
+Branch: <code>$(git rev-parse --abbrev-ref HEAD)</code>
+<i>Build started on Drone Cloud...</i>
+Check the build status here: https://cloud.drone.io/UtsavBalar1231/kernel_xiaomi_raphael/${DRONE_BUILD_NUMBER}" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
+curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="Build started for revision ${DRONE_BUILD_NUMBER}" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
+
 # Make defconfig
 make ARCH=arm64 \
 	O=${OUT_DIR} \
