@@ -63,51 +63,31 @@ Commit: <code>$MESSAGE</code>
 Check the build status here: https://cloud.drone.io/UtsavBalar1231/kernel_xiaomi_raphael/${DRONE_BUILD_NUMBER}" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
 curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="Build started for revision ${DRONE_BUILD_NUMBER}" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
 
-# Make defconfig
-make ARCH=arm64 \
-	O=${OUT_DIR} \
-	raphael_defconfig \
-	-j${KEBABS}
-
-if [[ "$@" =~ "lto"* ]]; then
-# Enable LTO
-scripts/config --file ${OUT_DIR}/.config \
-	-e LTO \
-	-e LTO_CLANG \
-	-d THINLTO \
-	-e SHADOW_CALL_STACK \
-	-e TOOLS_SUPPORT_RELR \
-	-e LD_LLD
-else
-# Enable LLD
-scripts/config --file ${OUT_DIR}/.config \
-	-d LTO \
-	-d LTO_CLANG \
-	-e SHADOW_CALL_STACK \
-	-e TOOLS_SUPPORT_RELR \
-	-e LD_LLD
-fi
-
-# Make olddefconfig
-cd ${OUT_DIR}
-make O=${OUT_DIR} \
-	ARCH=arm64 \
-	olddefconfig \
-	-j${KEBABS}
-cd ../
-
-# Set compiler PATH
-if [[ "$@" =~ "benzoclang"* ]]; then
-	PATH=${HOME}/clang/bin/:${HOME}/arm64-gcc/bin/:${HOME}/arm32-gcc/bin/:$PATH
-elif [[ "$@" =~ "proton"* ]]; then
-	PATH=${HOME}/clang/bin/:$PATH
-else
-	PATH=${HOME}/clang/bin/:$PATH
-fi
-
 START=$(date +"%s")
-
+# BenzoClang
 if [[ "$@" =~ "benzoclang"* ]]; then
+	# Make defconfig
+	make ARCH=arm64 \
+		O=${OUT_DIR} \
+		raphael_defconfig \
+		-j${KEBABS}
+
+	# Enable LLD
+	scripts/config --file ${OUT_DIR}/.config \
+		-d LTO \
+		-d LTO_CLANG \
+		-e SHADOW_CALL_STACK \
+		-e TOOLS_SUPPORT_RELR \
+		-e LD_LLD
+	# Make olddefconfig
+	cd ${OUT_DIR}
+	make O=${OUT_DIR} \
+		ARCH=arm64 \
+		olddefconfig \
+		-j${KEBABS}
+	cd ../
+	# Set compiler Path
+	PATH=${HOME}/clang/bin/:${HOME}/arm64-gcc/bin/:${HOME}/arm32-gcc/bin/:$PATH
 	make ARCH=arm64 \
 		O=${OUT_DIR} \
 		CC="ccache clang" \
@@ -122,6 +102,39 @@ if [[ "$@" =~ "benzoclang"* ]]; then
 		CROSS_COMPILE_ARM32="arm-linux-androideabi-" \
 		-j${KEBABS}
 elif [[ "$@" =~ "proton"* ]]; then
+	# Make defconfig
+	make ARCH=arm64 \
+		O=${OUT_DIR} \
+		raphael_defconfig \
+		-j${KEBABS}
+	if [[ "$@" =~ "lto"* ]]; then
+		# Enable LTO
+		scripts/config --file ${OUT_DIR}/.config \
+			-e LTO \
+			-e LTO_CLANG \
+			-d THINLTO \
+			-e SHADOW_CALL_STACK \
+			-e TOOLS_SUPPORT_RELR \
+			-e LD_LLD
+	else
+		# Enable LLD
+		scripts/config --file ${OUT_DIR}/.config \
+			-d LTO \
+			-d LTO_CLANG \
+			-e SHADOW_CALL_STACK \
+			-e TOOLS_SUPPORT_RELR \
+			-e LD_LLD
+	fi
+
+	# Make olddefconfig
+	cd ${OUT_DIR}
+	make O=${OUT_DIR} \
+		ARCH=arm64 \
+		olddefconfig \
+		-j${KEBABS}
+	cd ../
+	# Set compiler Path
+	PATH=${HOME}/clang/bin/:$PATH
 	make ARCH=arm64 \
 		O=${OUT_DIR} \
 		CC="ccache clang" \
@@ -136,6 +149,27 @@ elif [[ "$@" =~ "proton"* ]]; then
 		CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
 		-j${KEBABS}
 else
+	# Make defconfig
+	make ARCH=arm64 \
+		O=${OUT_DIR} \
+		raphael_defconfig \
+		-j${KEBABS}
+	# Enable LLD
+	scripts/config --file ${OUT_DIR}/.config \
+		-d LTO \
+		-d LTO_CLANG \
+		-e SHADOW_CALL_STACK \
+		-e TOOLS_SUPPORT_RELR \
+		-e LD_LLD
+	# Make olddefconfig
+	cd ${OUT_DIR}
+	make O=${OUT_DIR} \
+		ARCH=arm64 \
+		olddefconfig \
+		-j${KEBABS}
+	cd ../
+	# Set compiler Path
+	PATH=${HOME}/clang/bin/:$PATH
 	make ARCH=arm64 \
 		O=${OUT_DIR} \
 		CC="ccache clang" \
@@ -146,7 +180,7 @@ else
 		OBJDUMP="llvm-objdump" \
 		STRIP="llvm-strip" \
 		CLANG_TRIPLE="aarch64-linux-gnu-" \
-		CROSS_COMPILE="aarch64-linux-android-" \
+		CROSS_COMPILE="aarch64-linux-gnu-" \
 		CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
 		-j${KEBABS}
 fi
