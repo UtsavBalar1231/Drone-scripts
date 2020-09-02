@@ -32,7 +32,11 @@ export KBUILD_BUILD_USER="UtsavTheCunt"
 DATE=$(date +"%d.%m.%y")
 HOME="/drone/src/"
 OUT_DIR=out/
-VERSION="IMMENSiTY-AUTO-RAPHAEL-${TYPE}-${DRONE_BUILD_NUMBER}-${DATE}"
+if [[ "$@" =~ "lto"* ]]; then
+	VERSION="IMMENSiTY-AUTO-RAPHAEL-${TYPE}-LTO${DRONE_BUILD_NUMBER}-${DATE}"
+else
+	VERSION="IMMENSiTY-AUTO-RAPHAEL-${TYPE}-${DRONE_BUILD_NUMBER}-${DATE}"
+fi
 BRANCH=`git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'`
 REF=`echo "$BRANCH" | grep -Eo "[^ /]+\$"`
 AUTHOR=`git log $BRANCH -1 --format="%an"`
@@ -65,6 +69,16 @@ make ARCH=arm64 \
 	raphael_defconfig \
 	-j${KEBABS}
 
+if [[ "$@" =~ "lto"* ]]; then
+# Enable LTO
+scripts/config --file ${OUT_DIR}/.config \
+	-e LTO \
+	-e LTO_CLANG \
+	-d THINLTO \
+	-e SHADOW_CALL_STACK \
+	-e TOOLS_SUPPORT_RELR \
+	-e LD_LLD
+else
 # Enable LLD
 scripts/config --file ${OUT_DIR}/.config \
 	-d LTO \
@@ -72,6 +86,7 @@ scripts/config --file ${OUT_DIR}/.config \
 	-e SHADOW_CALL_STACK \
 	-e TOOLS_SUPPORT_RELR \
 	-e LD_LLD
+fi
 
 # Make olddefconfig
 cd ${OUT_DIR}
