@@ -149,6 +149,7 @@ else
 		CROSS_COMPILE="aarch64-linux-android-" \
 		CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
 		-j${KEBABS}
+fi
 
 END=$(date +"%s")
 DIFF=$(( END - START))
