@@ -28,6 +28,8 @@ else
 fi
 # Export Build username
 export KBUILD_BUILD_USER="UtsavTheCunt"
+export KBUILD_BUILD_HOST="CuntsSpace"
+
 # Enviromental Variables
 DATE=$(date +"%d.%m.%y")
 HOME="/drone/src/"
