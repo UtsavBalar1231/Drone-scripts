@@ -22,7 +22,11 @@ cd /drone/src/
 if [[ "$@" =~ "benzoclang"* ]]; then
 	export COMPILER="BenzoClang-12.0"
 elif [[ "$@" =~ "proton"* ]]; then
-	export COMPILER="ProtonClang-12.0"
+	if [[ "$@" =~ "lto"* ]]; then
+		export COMPILER="ProtonClang-12.0 LTO"
+	else
+		export COMPILER="ProtonClang-12.0"
+	fi
 else
 	export COMPILER="ProtonClang-12.0"
 fi
