@@ -39,15 +39,16 @@ DATE=$(date +"%d.%m.%y")
 HOME="/drone/src/"
 OUT_DIR=out/
 if [[ "$@" =~ "lto"* ]]; then
-	VERSION="IMMENSiTY-AUTO-RAPHAEL-${TYPE}-LTO${DRONE_BUILD_NUMBER}-${DATE}"
+	VERSION="IMMENSiTY-X-RAPHAEL-${TYPE}-LTO${DRONE_BUILD_NUMBER}-${DATE}"
 else
-	VERSION="IMMENSiTY-AUTO-RAPHAEL-${TYPE}-${DRONE_BUILD_NUMBER}-${DATE}"
+	VERSION="IMMENSiTY-X-RAPHAEL-${TYPE}-${DRONE_BUILD_NUMBER}-${DATE}"
 fi
 BRANCH=`git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'`
+KERNEL_LINK=https://GitHub.com/UtsavBalar1231/kernel_xiaomi_raphael
 REF=`echo "$BRANCH" | grep -Eo "[^ /]+\$"`
 AUTHOR=`git log $BRANCH -1 --format="%an"`
 COMMIT=`git log $BRANCH -1 --format="%h / %s"`
-MESSAGE="$AUTHOR@$REF: $COMMIT"
+MESSAGE="$AUTHOR@$REF: $KERNEL_LINK/commit/$COMMIT"
 # Export Zip name
 export ZIPNAME="${VERSION}.zip"
 
@@ -58,8 +59,8 @@ if [[ -z "${KEBABS}" ]]; then
 fi
 
 # Post to CI channel
-curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/SendAnimation -d animation=https://thumbs.gfycat.com/TidyOccasionalIncatern-size_restricted.gif -d chat_id=${CI_CHANNEL_ID}
-curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="<code>IMMENSiTY KERNAL</code>
+curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendPhoto -d photo=https://github.com/UtsavBalar1231/xda-stuff/raw/master/banner.png -d chat_id=${CI_CHANNEL_ID}
+curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="<code>IMMENS1TY-X</code>
 Build: <code>${TYPE}</code>
 Device: <code>XiaoMi Redmi K20 Pro (raphael)</code>
 Compiler: <code>${COMPILER}</code>
@@ -82,7 +83,7 @@ if [[ "$@" =~ "benzoclang"* ]]; then
 	scripts/config --file ${OUT_DIR}/.config \
 		-d LTO \
 		-d LTO_CLANG \
-		-e SHADOW_CALL_STACK \
+		-d SHADOW_CALL_STACK \
 		-e TOOLS_SUPPORT_RELR \
 		-e LD_LLD
 	# Make olddefconfig
@@ -123,7 +124,7 @@ elif [[ "$@" =~ "proton"* ]]; then
 			-e LTO \
 			-e LTO_CLANG \
 			-d THINLTO \
-			-e SHADOW_CALL_STACK \
+			-d SHADOW_CALL_STACK \
 			-e TOOLS_SUPPORT_RELR \
 			-e LD_LLD
 	else
@@ -131,7 +132,7 @@ elif [[ "$@" =~ "proton"* ]]; then
 		scripts/config --file ${OUT_DIR}/.config \
 			-d LTO \
 			-d LTO_CLANG \
-			-e SHADOW_CALL_STACK \
+			-d SHADOW_CALL_STACK \
 			-e TOOLS_SUPPORT_RELR \
 			-e LD_LLD
 	fi
@@ -172,7 +173,7 @@ else
 	scripts/config --file ${OUT_DIR}/.config \
 		-d LTO \
 		-d LTO_CLANG \
-		-e SHADOW_CALL_STACK \
+		-d SHADOW_CALL_STACK \
 		-e TOOLS_SUPPORT_RELR \
 		-e LD_LLD
 	# Make olddefconfig
