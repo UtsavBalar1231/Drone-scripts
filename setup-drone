@@ -19,7 +19,7 @@
 cd /drone/src/
 
 # anykernel3
-git clone https://github.com/utsavbalar1231/anykernel3 --depth=1 -b master anykernel
+git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b master anykernel
 
 # clone benzoclang-12.0
 if [[ "$@" =~ "benzoclang"* ]]; then
