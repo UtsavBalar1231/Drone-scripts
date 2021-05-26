@@ -2,14 +2,14 @@
 # shellcheck disable=SC2199
 # shellcheck source=/dev/null
 #
-# Copyright (c) 2020-21 UtsavBalar1231 <utsavbalar1231@gmail.com>
+# Copyright (C) 2020-21 UtsavBalar1231 <utsavbalar1231@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
 #    http://www.apache.org/licenses/LICENSE-2.0
-
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -34,20 +34,21 @@ export KBUILD_BUILD_USER="UtsavTheCunt"
 export KBUILD_BUILD_HOST="CuntsSpace"
 
 # Enviromental Variables
+AUTHOR=`git log $BRANCH -1 --format="%an"`
+BRANCH=`git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'`
+COMMIT=`git log $BRANCH -1 --format="%h / %s"`
 DATE=$(date +"%d.%m.%y")
+DEVICE="Redmi K20 Pro | Mi9T Pro"
 HOME="/drone/src/"
+KERNEL_LINK=https://github.com/UtsavBalar1231/kernel_xiaomi_raphael
+MESSAGE="$AUTHOR@$REF: $KERNEL_LINK/commit/$COMMIT"
 OUT_DIR=out/
+REF=`echo "$BRANCH" | grep -Eo "[^ /]+\$"`
 if [[ "$@" =~ "lto"* ]]; then
 	VERSION="IMMENSITY-RAPHAEL-${TYPE}-LTO-${DRONE_BUILD_NUMBER}-${DATE}"
 else
 	VERSION="IMMENSITY-RAPHAEL-${TYPE}-${DRONE_BUILD_NUMBER}-${DATE}"
 fi
-BRANCH=`git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'`
-KERNEL_LINK=https://github.com/UtsavBalar1231/kernel_xiaomi_raphael
-REF=`echo "$BRANCH" | grep -Eo "[^ /]+\$"`
-AUTHOR=`git log $BRANCH -1 --format="%an"`
-COMMIT=`git log $BRANCH -1 --format="%h / %s"`
-MESSAGE="$AUTHOR@$REF: $KERNEL_LINK/commit/$COMMIT"
 # Export Zip name
 export ZIPNAME="${VERSION}.zip"
 
@@ -60,29 +61,29 @@ fi
 # Post to CI channel
 curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendPhoto -d photo=https://github.com/UtsavBalar1231/xda-stuff/raw/master/banner.png -d chat_id=${CI_CHANNEL_ID}
 curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="<code>IMMENSITY</code>
-Build: <code>${TYPE}</code>
-Device: <code>XiaoMi Redmi K20 Pro (raphael)</code>
+Build Type: <code>${TYPE}</code>
+Device: <code>${DEVICE}</code>
 Compiler: <code>${COMPILER}</code>
 Branch: <code>$(git rev-parse --abbrev-ref HEAD)</code>
-Commit: <code>$MESSAGE</code>
+Commit: $MESSAGE
 <i>Build started on Drone Cloud...</i>
 Check the build status here: https://cloud.drone.io/UtsavBalar1231/kernel_xiaomi_raphael/${DRONE_BUILD_NUMBER}" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
 curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="Build started for revision ${DRONE_BUILD_NUMBER}" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
 
 START=$(date +"%s")
-# BenzoClang
+# Benzoclang
 if [[ "$@" =~ "benzoclang"* ]]; then
 	# Make defconfig
 	make ARCH=arm64 \
 		O=${OUT_DIR} \
 		raphael_defconfig \
 		-j${KEBABS}
-
 	# Enable LLD
 	scripts/config --file ${OUT_DIR}/.config \
 		-d LTO \
 		-d LTO_CLANG \
-		-d SHADOW_CALL_STACK \
+		-e SHADOW_CALL_STACK \
+		-e POLLY_CLANG \
 		-e TOOLS_SUPPORT_RELR \
 		-e LD_LLD
 	# Make olddefconfig
@@ -123,7 +124,8 @@ elif [[ "$@" =~ "proton"* ]]; then
 			-e LTO \
 			-e LTO_CLANG \
 			-d THINLTO \
-			-d SHADOW_CALL_STACK \
+			-e SHADOW_CALL_STACK \
+			-e POLLY_CLANG \
 			-e TOOLS_SUPPORT_RELR \
 			-e LD_LLD
 	else
@@ -131,7 +133,8 @@ elif [[ "$@" =~ "proton"* ]]; then
 		scripts/config --file ${OUT_DIR}/.config \
 			-d LTO \
 			-d LTO_CLANG \
-			-d SHADOW_CALL_STACK \
+			-e SHADOW_CALL_STACK \
+			-e POLLY_CLANG \
 			-e TOOLS_SUPPORT_RELR \
 			-e LD_LLD
 	fi
@@ -172,7 +175,8 @@ else
 	scripts/config --file ${OUT_DIR}/.config \
 		-d LTO \
 		-d LTO_CLANG \
-		-d SHADOW_CALL_STACK \
+		-e SHADOW_CALL_STACK \
+		-e POLLY_CLANG \
 		-e TOOLS_SUPPORT_RELR \
 		-e LD_LLD
 	# Make olddefconfig
@@ -214,7 +218,7 @@ cd anykernel
 zip -r9 ${ZIPNAME} * -x .git .gitignore *.zip
 CHECKER=$(ls -l ${ZIPNAME} | awk '{print $5}')
 if (($((CHECKER / 1048576)) > 5)); then
-	curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="Kernel compiled successfully in $((DIFF / 60)) minute(s) and $((DIFF % 60)) seconds for Raphael" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
+	curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="✅Kernel compiled successfully in $((DIFF / 60)) minute(s) and $((DIFF % 60)) seconds for ${DEVICE}" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
 	curl -F chat_id="${CI_CHANNEL_ID}" -F document=@"$(pwd)/${ZIPNAME}" https://api.telegram.org/bot${BOT_API_KEY}/sendDocument
 else
 	curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="Error in build!!" -d chat_id=${CI_CHANNEL_ID}
