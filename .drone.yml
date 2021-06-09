@@ -13,6 +13,9 @@ clone:
 steps:
   - name: kernel
     image: ubuntu:latest
+    settings:
+      ssh_key:
+        from_secret: ssh_key
     environment:
       TYPE: "KONA"
     commands:
