@@ -1,0 +1,27 @@
+---
+kind: pipeline
+type: docker
+name: kernel_xiaomi_alioth
+
+platform:
+  os: linux
+  arch: amd64
+
+clone:
+  depth: 1
+
+steps:
+  - name: kernel
+    image: ubuntu:latest
+    environment:
+      TYPE: "KONA"
+    commands:
+      - apt-get update && apt-get install -y bison build-essential bc bison curl libssl-dev git zip python3 python flex cpio
+      - git clone https://github.com/UtsavBalar1231/Drone-scripts.git -b kona script && cd script
+      - ./setup-drone
+      - ./build-kernel
+    when:
+      branch:
+        - kona
+      event:
+        - push

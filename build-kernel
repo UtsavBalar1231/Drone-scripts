@@ -17,7 +17,6 @@
 # limitations under the License.
 
 cd /drone/src/
-ls -l
 HOME="/drone/src/"
 
 # Export Build username
@@ -38,14 +37,6 @@ COMMIT=`git log $BRANCH -1 --format="%h / %s"`
 # Set current date
 DATE=$(date +"%d.%m.%y")
 
-# Post to CI channel
-curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendPhoto -d photo=https://github.com/UtsavBalar1231/xda-stuff/raw/master/banner.png -d chat_id=${CI_CHANNEL_ID}
-curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="<code>IMMENSITY</code>
-<b>Build Type:</b> <code>${TYPE}</code>
-<b>Branch:</b> <code>$(git rev-parse --abbrev-ref HEAD)</code>
-<i>Build started on Drone Cloud...</i>
-Check the build status here: https://cloud.drone.io/UtsavBalar1231/kernel_xiaomi_alioth/${DRONE_BUILD_NUMBER}" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
-curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="Build started for revision ${DRONE_BUILD_NUMBER}" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
-
 ls -l
+
 bash build_alioth.sh
