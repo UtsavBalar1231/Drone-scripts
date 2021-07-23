@@ -81,17 +81,18 @@ fi
 
 # Post to CI channel
 curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendPhoto -d photo=https://github.com/UtsavBalar1231/xda-stuff/raw/master/banner.png -d chat_id=${CI_CHANNEL_ID}
-curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="<code>IMMENSITY Automated build</code>
-<b>• Build Type:</b> <code>${TYPE}</code>
-<b>• Device:</b> <code>${DEVICE}</code>
-<b>• Compiler:</b> <code>${COMPILER}</code>
-<b>• Branch:</b> <code>$(git rev-parse --abbrev-ref HEAD)</code>
-<b>• Kernel version:</b> ${KERNELVER}
-<b>• Commit:</b> $MESSAGE
-<br>
+curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="<code>               IMMENSITY Automated build</code>
+<code>-----------------------------------------------------------</code>
+<b>• BuildType</b> : <code>${TYPE}</code>
+<b>• Device</b> : <code>${DEVICE}</code>
+<b>• Compiler</b> : <code>${COMPILER}</code>
+<b>• Branch</b> : <code>$(git rev-parse --abbrev-ref HEAD)</code>
+<b>• Kernelversion</b> : <code>${KERNELVER}</code>
+<b>• Commit</b> : <code>$MESSAGE</code>
+<code>-----------------------------------------------------------</code>
+
 <i>• Build started on Drone Cloud...</i>
-<br>
-• Check the build status here: https://cloud.drone.io/UtsavBalar1231/kernel_xiaomi_sm8250/${DRONE_BUILD_NUMBER}" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
+• <a href='https://cloud.drone.io/UtsavBalar1231/kernel_xiaomi_sm8250/${DRONE_BUILD_NUMBER}'>Check the build status here</a>" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
 curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="Build started for revision ${DRONE_BUILD_NUMBER}" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
 
 START=$(date +"%s")
