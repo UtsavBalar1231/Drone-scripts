@@ -2,7 +2,7 @@
 # shellcheck disable=SC2199
 # shellcheck source=/dev/null
 #
-# Copyright (C) 2020 UtsavBalar1231 <utsavbalar1231@gmail.com>
+# Copyright (C) 2020-21 UtsavBalar1231 <utsavbalar1231@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 cd /drone/src/
 
 # Anykernel3
-git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b master anykernel
+git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b alioth anykernel
 
 # Clone compiler
 if [[ "$@" =~ "benzoclang"* ]]; then
