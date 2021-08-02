@@ -45,9 +45,6 @@ COMMIT=`git log $BRANCH -1 --format="%h / %s"`
 # Set current date
 DATE=$(date +"%d.%m.%y")
 
-# Set device/s name
-DEVICE="alioth"
-
 # Set Kernel link 
 KERNEL_LINK=https://github.com/UtsavBalar1231/kernel_xiaomi_sm8250
 

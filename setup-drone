@@ -19,7 +19,17 @@
 cd /drone/src/
 
 # Anykernel3
-git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b alioth anykernel
+if [[ "$@" =~ "alioth"* ]]; then
+	git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b alioth anykernel
+elif [[ "$@" =~ "apollo"* ]]; then
+	git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b apollo anykernel
+elif [[ "$@" =~ "cmi"* ]]; then
+	git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b cmi anykernel
+elif [[ "$@" =~ "umi"* ]]; then
+	git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b umi anykernel
+else
+	git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b alioth anykernel
+fi
 
 # Clone compiler
 if [[ "$@" =~ "benzoclang"* ]]; then
