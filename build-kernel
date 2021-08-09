@@ -46,7 +46,11 @@ COMMIT=`git log $BRANCH -1 --format="%h / %s"`
 DATE=$(date +"%d.%m.%y")
 
 # Set Kernel link 
-KERNEL_LINK=https://github.com/UtsavBalar1231/kernel_xiaomi_sm8250
+if [[ "$@" =~ "raphael"* ]]; then
+	KERNEL_LINK=https://github.com/UtsavBalar1231/kernel_xiaomi_raphael
+else
+	KERNEL_LINK=https://github.com/UtsavBalar1231/kernel_xiaomi_sm8250
+fi
 
 # Set Kernel Version
 KERNELVER=$(make kernelversion)
@@ -140,13 +144,29 @@ elif [[ "$@" =~ "proton"* ]]; then
 		cd ../
 	fi
 
-	make ARCH=arm64 \
-		O=${OUT_DIR} \
-		LLVM=1 \
-		CLANG_TRIPLE="aarch64-linux-gnu-" \
-		CROSS_COMPILE="aarch64-linux-gnu-" \
-		CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
-		-j${KEBABS}
+	if [[ "$@" =~ "raphael"* ]]; then
+		make ARCH=arm64 \
+			O=${OUT_DIR} \
+			CC="clang" \
+			AR="llvm-ar" \
+			NM="llvm-nm" \
+			OBJCOPY="llvm-objcopy" \
+			OBJDUMP="llvm-objdump" \
+			STRIP="llvm-strip" \
+			LD="ld.lld" \
+			CLANG_TRIPLE="aarch64-linux-gnu-" \
+			CROSS_COMPILE="aarch64-linux-gnu-" \
+			CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
+			-j${KEBABS}
+	else
+		make ARCH=arm64 \
+			O=${OUT_DIR} \
+			LLVM=1 \
+			CLANG_TRIPLE="aarch64-linux-gnu-" \
+			CROSS_COMPILE="aarch64-linux-gnu-" \
+			CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
+			-j${KEBABS}
+	fi
 else
 	# Set compiler Path
 	PATH=${HOME}/clang/bin/:$PATH
@@ -156,13 +176,29 @@ else
 		${DEVICE}_defconfig \
 		-j${KEBABS}
 
-	make ARCH=arm64 \
-		O=${OUT_DIR} \
-		LLVM=1 \
-		CLANG_TRIPLE="aarch64-linux-gnu-" \
-		CROSS_COMPILE="aarch64-linux-gnu-" \
-		CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
-		-j${KEBABS}
+	if [[ "$@" =~ "raphael"* ]]; then
+		make ARCH=arm64 \
+			O=${OUT_DIR} \
+			CC="clang" \
+			AR="llvm-ar" \
+			NM="llvm-nm" \
+			OBJCOPY="llvm-objcopy" \
+			OBJDUMP="llvm-objdump" \
+			STRIP="llvm-strip" \
+			LD="ld.lld" \
+			CLANG_TRIPLE="aarch64-linux-gnu-" \
+			CROSS_COMPILE="aarch64-linux-gnu-" \
+			CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
+			-j${KEBABS}
+	else
+		make ARCH=arm64 \
+			O=${OUT_DIR} \
+			LLVM=1 \
+			CLANG_TRIPLE="aarch64-linux-gnu-" \
+			CROSS_COMPILE="aarch64-linux-gnu-" \
+			CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
+			-j${KEBABS}
+	fi
 fi
 
 END=$(date +"%s")
