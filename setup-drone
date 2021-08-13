@@ -28,7 +28,7 @@ elif [[ "$@" =~ "cmi"* ]]; then
 elif [[ "$@" =~ "umi"* ]]; then
 	git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b umi anykernel
 elif [[ "$@" =~ "raphael"* ]]; then
-	git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b raphael anykernel
+	git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b master anykernel
 else
 	git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b alioth anykernel
 fi
