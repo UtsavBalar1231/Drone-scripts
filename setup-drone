@@ -16,30 +16,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cd /drone/src/
+cd /drone/src/ || exit
 
 # Anykernel3
 if [[ "$@" =~ "alioth"* ]]; then
-	git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b alioth anykernel
+        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b alioth anykernel
 elif [[ "$@" =~ "apollo"* ]]; then
-	git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b apollo anykernel
+        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b apollo anykernel
 elif [[ "$@" =~ "cmi"* ]]; then
-	git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b cmi anykernel
+        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b cmi anykernel
 elif [[ "$@" =~ "umi"* ]]; then
-	git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b umi anykernel
+        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b umi anykernel
 elif [[ "$@" =~ "raphael"* ]]; then
-	git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b master anykernel
+        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b master anykernel
 else
-	git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b alioth anykernel
+        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b alioth anykernel
 fi
 
 # Clone compiler
 if [[ "$@" =~ "benzoclang"* ]]; then
-	git clone https://github.com/lineageos/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 --depth=1 -b lineage-18.1 arm64-gcc
-	git clone https://github.com/lineageos/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 --depth=1 -b lineage-18.1 arm32-gcc
-	git clone https://github.com/BenzoRom/benzoclang-13.0 --depth=1 clang
+        git clone https://github.com/lineageos/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 --depth=1 -b lineage-18.1 arm64-gcc
+        git clone https://github.com/lineageos/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 --depth=1 -b lineage-18.1 arm32-gcc
+        git clone https://github.com/BenzoRom/benzoclang-13.0 --depth=1 clang
 elif [[ "$@" =~ "proton"* ]]; then
-	git clone https://github.com/kdrag0n/proton-clang -b master --depth=1 clang
+        git clone https://github.com/kdrag0n/proton-clang -b master --depth=1 clang
 else
         git clone https://github.com/kdrag0n/proton-clang -b master --depth=1 clang
 fi

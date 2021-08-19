@@ -16,40 +16,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cd /drone/src/
+cd /drone/src/ || exit
 
 HOME="/drone/src/"
 
 # Export Cross Compiler name
 if [[ "$@" =~ "benzoclang"* ]]; then
-	export COMPILER="BenzoClang-13.0"
+        export COMPILER="BenzoClang-13.0"
 elif [[ "$@" =~ "proton"* ]]; then
-	if [[ "$@" =~ "lto"* ]]; then
-		export COMPILER="Proton clang 13.0 LTO"
-	else
-		export COMPILER="Proton clang 13.0"
-	fi
+        if [[ "$@" =~ "lto"* ]]; then
+                export COMPILER="Proton clang 13.0 LTO"
+        else
+                export COMPILER="Proton clang 13.0"
+        fi
 fi
 
 # Enviromental Variables
 
 # Set the last commit author
-AUTHOR=`git log $BRANCH -1 --format="%an"`
+AUTHOR=$(git log "$BRANCH" -1 --format="%an")
 
 # Set the current branch name
-BRANCH=`git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'`
+BRANCH=$(git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')
 
 # Set the last commit sha
-COMMIT=`git log $BRANCH -1 --format="%h / %s"`
+COMMIT=$(git log "$BRANCH" -1 --format="%h / %s")
 
 # Set current date
 DATE=$(date +"%d.%m.%y")
 
-# Set Kernel link 
+# Set Kernel link
 if [[ "$@" =~ "raphael"* ]]; then
-	KERNEL_LINK=https://github.com/UtsavBalar1231/kernel_xiaomi_raphael
+        KERNEL_LINK=https://github.com/UtsavBalar1231/kernel_xiaomi_raphael
 else
-	KERNEL_LINK=https://github.com/UtsavBalar1231/kernel_xiaomi_sm8250
+        KERNEL_LINK=https://github.com/UtsavBalar1231/kernel_xiaomi_sm8250
 fi
 
 # Set Kernel Version
@@ -62,13 +62,13 @@ MESSAGE="$AUTHOR@$REF$KERNEL_LINK/commit/$COMMIT"
 OUT_DIR=out/
 
 # Get reference string
-REF=`echo "$BRANCH" | grep -Eo "[^ /]+\$"`
+REF=$(echo "$BRANCH" | grep -Eo "[^ /]+\$")
 
 # Select LTO or non LTO builds
 if [[ "$@" =~ "lto"* ]]; then
-	VERSION="IMMENSITY-${DEVICE^^}-${TYPE}-LTO-${DRONE_BUILD_NUMBER}-${DATE}"
+        VERSION="IMMENSITY-${DEVICE^^}-${TYPE}-LTO-${DRONE_BUILD_NUMBER}-${DATE}"
 else
-	VERSION="IMMENSITY-${DEVICE^^}-${TYPE}-${DRONE_BUILD_NUMBER}-${DATE}"
+        VERSION="IMMENSITY-${DEVICE^^}-${TYPE}-${DRONE_BUILD_NUMBER}-${DATE}"
 fi
 
 # Export Zip name
@@ -76,13 +76,13 @@ export ZIPNAME="${VERSION}.zip"
 
 # How much kebabs we need? Kanged from @raphielscape :)
 if [[ -z "${KEBABS}" ]]; then
-	COUNT="$(grep -c '^processor' /proc/cpuinfo)"
-	export KEBABS="$((COUNT * 2))"
+        COUNT="$(grep -c '^processor' /proc/cpuinfo)"
+        export KEBABS="$((COUNT * 2))"
 fi
 
 # Post to CI channel
-curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendPhoto -d photo=https://github.com/UtsavBalar1231/xda-stuff/raw/master/banner.png -d chat_id=${CI_CHANNEL_ID}
-curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="<code>               IMMENSITY Automated build</code>
+curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendPhoto -d photo=https://github.com/UtsavBalar1231/xda-stuff/raw/master/banner.png -d chat_id="${CI_CHANNEL_ID}"
+curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="<code>               IMMENSITY Automated build</code>
 <code>-----------------------------------------------------------</code>
 <b>• BuildType</b> : <code>${TYPE}</code>
 <b>• Device</b> : <code>${DEVICE}</code>
@@ -93,132 +93,132 @@ curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="
 <code>-----------------------------------------------------------</code>
 
 <i>• Build started on Drone Cloud...</i>
-• <a href='https://cloud.drone.io/UtsavBalar1231/kernel_xiaomi_sm8250/${DRONE_BUILD_NUMBER}'>Check the build status here</a>" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
-curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="Build started for revision ${DRONE_BUILD_NUMBER}" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
+• <a href='https://cloud.drone.io/UtsavBalar1231/kernel_xiaomi_sm8250/${DRONE_BUILD_NUMBER}'>Check the build status here</a>" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
+curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Build started for revision ${DRONE_BUILD_NUMBER}" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
 
 START=$(date +"%s")
 # Benzoclang
 if [[ "$@" =~ "benzoclang"* ]]; then
-	# Set compiler Path
-	PATH=${HOME}/clang/bin/:${HOME}/arm64-gcc/bin/:${HOME}/arm32-gcc/bin/:$PATH
-	# Make defconfig
-	make ARCH=arm64 \
-		O=${OUT_DIR} \
-		${DEVICE}_defconfig \
-		-j${KEBABS}
+        # Set compiler Path
+        PATH=${HOME}/clang/bin/:${HOME}/arm64-gcc/bin/:${HOME}/arm32-gcc/bin/:$PATH
+        # Make defconfig
+        make ARCH=arm64 \
+                O=${OUT_DIR} \
+                "${DEVICE}"_defconfig \
+                -j${KEBABS}
 
-	make ARCH=arm64 \
-		O=${OUT_DIR} \
-		LLVM=1 \
-		CLANG_TRIPLE="aarch64-linux-gnu-" \
-		CROSS_COMPILE="aarch64-linux-android-" \
-		CROSS_COMPILE_ARM32="arm-linux-androideabi-" \
-		-j${KEBABS}
+        make ARCH=arm64 \
+                O=${OUT_DIR} \
+                LLVM=1 \
+                CLANG_TRIPLE="aarch64-linux-gnu-" \
+                CROSS_COMPILE="aarch64-linux-android-" \
+                CROSS_COMPILE_ARM32="arm-linux-androideabi-" \
+                -j${KEBABS}
 elif [[ "$@" =~ "proton"* ]]; then
-	# Set compiler Path
-	PATH=${HOME}/clang/bin/:$PATH
+        # Set compiler Path
+        PATH=${HOME}/clang/bin/:$PATH
 
-	# Make defconfig
-	make ARCH=arm64 \
-		O=${OUT_DIR} \
-		${DEVICE}_defconfig \
-		-j${KEBABS}
+        # Make defconfig
+        make ARCH=arm64 \
+                O=${OUT_DIR} \
+                "${DEVICE}"_defconfig \
+                -j${KEBABS}
 
-	if [[ "$@" =~ "lto"* ]]; then
-		# Enable LTO
-		scripts/config --file ${OUT_DIR}/.config \
-			-e LTO \
-			-e LTO_CLANG \
-			-d THINLTO \
-			-e SHADOW_CALL_STACK \
-			-e POLLY_CLANG \
-			-e TOOLS_SUPPORT_RELR \
-			-e LD_LLD
+        if [[ "$@" =~ "lto"* ]]; then
+                # Enable LTO
+                scripts/config --file ${OUT_DIR}/.config \
+                        -e LTO \
+                        -e LTO_CLANG \
+                        -d THINLTO \
+                        -e SHADOW_CALL_STACK \
+                        -e POLLY_CLANG \
+                        -e TOOLS_SUPPORT_RELR \
+                        -e LD_LLD
 
-		# Make olddefconfig
-		cd ${OUT_DIR}
-		make O=${OUT_DIR} \
-			ARCH=arm64 \
-			olddefconfig \
-			-j${KEBABS}
-		cd ../
-	fi
+                # Make olddefconfig
+                cd ${OUT_DIR} || exit
+                make O=${OUT_DIR} \
+                        ARCH=arm64 \
+                        olddefconfig \
+                        -j${KEBABS}
+                cd ../
+        fi
 
-	if [[ "$@" =~ "raphael"* ]]; then
-		make ARCH=arm64 \
-			O=${OUT_DIR} \
-			CC="clang" \
-			AR="llvm-ar" \
-			NM="llvm-nm" \
-			OBJCOPY="llvm-objcopy" \
-			OBJDUMP="llvm-objdump" \
-			STRIP="llvm-strip" \
-			LD="ld.lld" \
-			CLANG_TRIPLE="aarch64-linux-gnu-" \
-			CROSS_COMPILE="aarch64-linux-gnu-" \
-			CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
-			-j${KEBABS}
-	else
-		make ARCH=arm64 \
-			O=${OUT_DIR} \
-			LLVM=1 \
-			CLANG_TRIPLE="aarch64-linux-gnu-" \
-			CROSS_COMPILE="aarch64-linux-gnu-" \
-			CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
-			-j${KEBABS}
-	fi
+        if [[ "$@" =~ "raphael"* ]]; then
+                make ARCH=arm64 \
+                        O=${OUT_DIR} \
+                        CC="clang" \
+                        AR="llvm-ar" \
+                        NM="llvm-nm" \
+                        OBJCOPY="llvm-objcopy" \
+                        OBJDUMP="llvm-objdump" \
+                        STRIP="llvm-strip" \
+                        LD="ld.lld" \
+                        CLANG_TRIPLE="aarch64-linux-gnu-" \
+                        CROSS_COMPILE="aarch64-linux-gnu-" \
+                        CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
+                        -j${KEBABS}
+        else
+                make ARCH=arm64 \
+                        O=${OUT_DIR} \
+                        LLVM=1 \
+                        CLANG_TRIPLE="aarch64-linux-gnu-" \
+                        CROSS_COMPILE="aarch64-linux-gnu-" \
+                        CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
+                        -j${KEBABS}
+        fi
 else
-	# Set compiler Path
-	PATH=${HOME}/clang/bin/:$PATH
-	# Make defconfig
-	make ARCH=arm64 \
-		O=${OUT_DIR} \
-		${DEVICE}_defconfig \
-		-j${KEBABS}
+        # Set compiler Path
+        PATH=${HOME}/clang/bin/:$PATH
+        # Make defconfig
+        make ARCH=arm64 \
+                O=${OUT_DIR} \
+                "${DEVICE}"_defconfig \
+                -j${KEBABS}
 
-	if [[ "$@" =~ "raphael"* ]]; then
-		make ARCH=arm64 \
-			O=${OUT_DIR} \
-			CC="clang" \
-			AR="llvm-ar" \
-			NM="llvm-nm" \
-			OBJCOPY="llvm-objcopy" \
-			OBJDUMP="llvm-objdump" \
-			STRIP="llvm-strip" \
-			LD="ld.lld" \
-			CLANG_TRIPLE="aarch64-linux-gnu-" \
-			CROSS_COMPILE="aarch64-linux-gnu-" \
-			CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
-			-j${KEBABS}
-	else
-		make ARCH=arm64 \
-			O=${OUT_DIR} \
-			LLVM=1 \
-			CLANG_TRIPLE="aarch64-linux-gnu-" \
-			CROSS_COMPILE="aarch64-linux-gnu-" \
-			CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
-			-j${KEBABS}
-	fi
+        if [[ "$@" =~ "raphael"* ]]; then
+                make ARCH=arm64 \
+                        O=${OUT_DIR} \
+                        CC="clang" \
+                        AR="llvm-ar" \
+                        NM="llvm-nm" \
+                        OBJCOPY="llvm-objcopy" \
+                        OBJDUMP="llvm-objdump" \
+                        STRIP="llvm-strip" \
+                        LD="ld.lld" \
+                        CLANG_TRIPLE="aarch64-linux-gnu-" \
+                        CROSS_COMPILE="aarch64-linux-gnu-" \
+                        CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
+                        -j${KEBABS}
+        else
+                make ARCH=arm64 \
+                        O=${OUT_DIR} \
+                        LLVM=1 \
+                        CLANG_TRIPLE="aarch64-linux-gnu-" \
+                        CROSS_COMPILE="aarch64-linux-gnu-" \
+                        CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
+                        -j${KEBABS}
+        fi
 fi
 
 END=$(date +"%s")
 DIFF=$(( END - START))
 
 # Import Anykernel3 folder
-cp $(pwd)/${OUT_DIR}/arch/arm64/boot/Image.gz-dtb $(pwd)/anykernel/
-cp $(pwd)/${OUT_DIR}/arch/arm64/boot/dtbo.img $(pwd)/anykernel/
+cp "$(pwd)"/${OUT_DIR}/arch/arm64/boot/Image.gz-dtb "$(pwd)"/anykernel/
+cp "$(pwd)"/${OUT_DIR}/arch/arm64/boot/dtbo.img "$(pwd)"/anykernel/
 
-cd anykernel
-zip -r9 ${ZIPNAME} * -x .git .gitignore *.zip
-CHECKER=$(ls -l ${ZIPNAME} | awk '{print $5}')
+cd anykernel || exit
+zip -r9 "${ZIPNAME}" ./* -x .git .gitignore ./*.zip
+CHECKER=$(ls -l "${ZIPNAME}" | awk '{print $5}')
 if (($((CHECKER / 1048576)) > 5)); then
-	curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="✅Kernel compiled successfully in $((DIFF / 60)) minute(s) and $((DIFF % 60)) seconds for ${DEVICE}" -d chat_id=${CI_CHANNEL_ID} -d parse_mode=HTML
-	curl -F chat_id="${CI_CHANNEL_ID}" -F document=@"$(pwd)/${ZIPNAME}" https://api.telegram.org/bot${BOT_API_KEY}/sendDocument
+        curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="✅Kernel compiled successfully in $((DIFF / 60)) minute(s) and $((DIFF % 60)) seconds for ${DEVICE}" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
+        curl -F chat_id="${CI_CHANNEL_ID}" -F document=@"$(pwd)/${ZIPNAME}" https://api.telegram.org/bot"${BOT_API_KEY}"/sendDocument
 else
-	curl -s -X POST https://api.telegram.org/bot${BOT_API_KEY}/sendMessage -d text="Error in build!!" -d chat_id=${CI_CHANNEL_ID}
-	exit 1;
+        curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Error in build!!" -d chat_id="${CI_CHANNEL_ID}"
+        exit 1;
 fi
-cd $(pwd)
+cd "$(pwd)" || exit
 
 # Cleanup
 rm -fr anykernel/
