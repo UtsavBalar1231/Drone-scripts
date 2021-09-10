@@ -36,13 +36,13 @@ fi
 #
 
 # Set the last commit author
-AUTHOR=$(git log "$BRANCH" -n 1 --pretty=format:"%an")
+AUTHOR=$(git log -n 1 --pretty=format:'%an')
 
 # Set the current branch name
-BRANCH=$(git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')
+BRANCH=$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)
 
 # Set the last commit sha
-COMMIT=$(git log "$BRANCH" -n 1 --pretty=format:"%h / %s")
+COMMIT=$(git rev-parse --short HEAD)
 
 # Set current date
 DATE=$(date +"%d.%m.%y")
