@@ -66,7 +66,7 @@ REF=$(echo "$BRANCH" | grep -Eo "[^ /]+\$")
 
 # Select LTO or non LTO builds
 if [[ "$@" =~ "lto"* ]]; then
-        VERSION="IMMENSITY-${DEVICE^^}-${TYPE}-LTO-${DRONE_BUILD_NUMBER}-${DATE}"
+                VERSION="IMMENSITY-${DEVICE^^}-${TYPE}-LTO-${DRONE_BUILD_NUMBER}-${DATE}"
 else
         VERSION="IMMENSITY-${DEVICE^^}-${TYPE}-${DRONE_BUILD_NUMBER}-${DATE}"
 fi
@@ -107,10 +107,38 @@ if [[ "$@" =~ "benzoclang"* ]]; then
                 "${DEVICE}"_defconfig \
                 -j${KEBABS}
 
+        if [[ "$@" =~ "miui"* ]]; then
+                # Enable LLD
+                scripts/config --file ${OUT_DIR}/.config \
+                        -e MIHW \
+                        -e MILLET \
+                        -e MI_RECLAIM \
+                        -e BINDER_OPT \
+                        -e KPERFEVENTS \
+                        -e PERF_HUMANTASK \
+
+                # Make olddefconfig
+                cd ${OUT_DIR} || exit
+                make O=${OUT_DIR} \
+                        ARCH=arm64 \
+                        olddefconfig
+                cd ../
+
+                sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
+                sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
+                sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
+                sed -i 's/<71>/<710>/g' arch/arm64/boot/dts/vendor/qcom/qcom/dsi-panel-j1s*
+                sed -i 's/<71>/<710>/g' arch/arm64/boot/dts/vendor/qcom/qcom/dsi-panel-j2*
+                sed -i 's/<155>/<1544>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
+                sed -i 's/<155>/<1545>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
+                sed -i 's/<155>/<1546>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
+                sed -i 's/<154>/<1537>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j1s*
+                sed -i 's/<154>/<1537>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2*
+        fi
+
         make ARCH=arm64 \
                 O=${OUT_DIR} \
                 LLVM=1 \
-                CLANG_TRIPLE="aarch64-linux-gnu-" \
                 CROSS_COMPILE="aarch64-linux-android-" \
                 CROSS_COMPILE_ARM32="arm-linux-androideabi-" \
                 -j${KEBABS}
@@ -124,7 +152,8 @@ elif [[ "$@" =~ "proton"* ]]; then
                 "${DEVICE}"_defconfig \
                 -j${KEBABS}
 
-        if [[ "$@" =~ "lto"* ]]; then
+
+        if [[ "$@" =~ "lto"* ]] && [[ ! "$@" =~ "miui"* ]]; then
                 # Enable LTO
                 scripts/config --file ${OUT_DIR}/.config \
                         -e LTO \
@@ -142,6 +171,42 @@ elif [[ "$@" =~ "proton"* ]]; then
                         olddefconfig \
                         -j${KEBABS}
                 cd ../
+
+        elif [[ "$@" =~ "lto"* ]] && [[ "$@" =~ "miui"* ]]; then
+                # Enable LTO
+                scripts/config --file ${OUT_DIR}/.config \
+                        -e LTO \
+                        -e LTO_CLANG \
+                        -d THINLTO \
+                        -e SHADOW_CALL_STACK \
+                        -e POLLY_CLANG \
+                        -e TOOLS_SUPPORT_RELR \
+                        -e LD_LLD \
+                	-e MIHW \
+		        -e MILLET \
+		        -e MI_RECLAIM \
+		        -e BINDER_OPT \
+		        -e KPERFEVENTS \
+		        -e PERF_HUMANTASK
+
+                # Make olddefconfig
+                cd ${OUT_DIR} || exit
+                make O=${OUT_DIR} \
+                        ARCH=arm64 \
+                        olddefconfig \
+                        -j${KEBABS}
+                cd ../
+
+                sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
+                sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
+                sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
+                sed -i 's/<71>/<710>/g' arch/arm64/boot/dts/vendor/qcom/qcom/dsi-panel-j1s*
+                sed -i 's/<71>/<710>/g' arch/arm64/boot/dts/vendor/qcom/qcom/dsi-panel-j2*
+                sed -i 's/<155>/<1544>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
+                sed -i 's/<155>/<1545>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
+                sed -i 's/<155>/<1546>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
+                sed -i 's/<154>/<1537>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j1s*
+                sed -i 's/<154>/<1537>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2*
         fi
 
         if [[ "$@" =~ "raphael"* ]]; then
@@ -159,17 +224,43 @@ elif [[ "$@" =~ "proton"* ]]; then
                         CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
                         -j${KEBABS}
         else
+                if [[ "$@" =~ "miui"* ]]; then
+                        scripts/config --file ${OUT_DIR}/.config \
+                                -e MIHW \
+                                -e MILLET \
+                                -e MI_RECLAIM \
+                                -e BINDER_OPT \
+                                -e KPERFEVENTS \
+                                -e PERF_HUMANTASK \
+
+                        # Make olddefconfig
+                        cd ${OUT_DIR} || exit
+                        make O=${OUT_DIR} \
+                                ARCH=arm64 \
+                                olddefconfig
+                        cd ../
+
+                        sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
+                        sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
+                        sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
+                        sed -i 's/<71>/<710>/g' arch/arm64/boot/dts/vendor/qcom/qcom/dsi-panel-j1s*
+                        sed -i 's/<71>/<710>/g' arch/arm64/boot/dts/vendor/qcom/qcom/dsi-panel-j2*
+                        sed -i 's/<155>/<1544>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
+                        sed -i 's/<155>/<1545>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
+                        sed -i 's/<155>/<1546>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
+                        sed -i 's/<154>/<1537>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j1s*
+                        sed -i 's/<154>/<1537>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2*
+                fi
                 make ARCH=arm64 \
                         O=${OUT_DIR} \
                         LLVM=1 \
-                        CLANG_TRIPLE="aarch64-linux-gnu-" \
                         CROSS_COMPILE="aarch64-linux-gnu-" \
                         CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
                         -j${KEBABS}
         fi
 else
         # Set compiler Path
-        PATH=${HOME}/clang/bin/:$PATH
+        PATH=${HOME}/clang/bin/:${HOME}/arm64-gas/bin/:${HOME}/arm32-gas/bin/:$PATH
         # Make defconfig
         make ARCH=arm64 \
                 O=${OUT_DIR} \
@@ -191,10 +282,36 @@ else
                         CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
                         -j${KEBABS}
         else
+                if [[ "$@" =~ "miui"* ]]; then
+                        scripts/config --file ${OUT_DIR}/.config \
+                                -e MIHW \
+                                -e MILLET \
+                                -e MI_RECLAIM \
+                                -e BINDER_OPT \
+                                -e KPERFEVENTS \
+                                -e PERF_HUMANTASK \
+
+                        # Make olddefconfig
+                        cd ${OUT_DIR} || exit
+                        make O=${OUT_DIR} \
+                                ARCH=arm64 \
+                                olddefconfig
+                        cd ../
+
+                        sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
+                        sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
+                        sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
+                        sed -i 's/<71>/<710>/g' arch/arm64/boot/dts/vendor/qcom/qcom/dsi-panel-j1s*
+                        sed -i 's/<71>/<710>/g' arch/arm64/boot/dts/vendor/qcom/qcom/dsi-panel-j2*
+                        sed -i 's/<155>/<1544>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
+                        sed -i 's/<155>/<1545>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
+                        sed -i 's/<155>/<1546>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
+                        sed -i 's/<154>/<1537>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j1s*
+                        sed -i 's/<154>/<1537>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2*
+                fi
                 make ARCH=arm64 \
                         O=${OUT_DIR} \
                         LLVM=1 \
-                        CLANG_TRIPLE="aarch64-linux-gnu-" \
                         CROSS_COMPILE="aarch64-linux-gnu-" \
                         CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
                         -j${KEBABS}
@@ -202,7 +319,7 @@ else
 fi
 
 END=$(date +"%s")
-DIFF=$(( END - START))
+DIFF=$((END - START))
 
 # Import Anykernel3 folder
 cp "$(pwd)"/${OUT_DIR}/arch/arm64/boot/Image.gz-dtb "$(pwd)"/anykernel/
@@ -210,7 +327,7 @@ cp "$(pwd)"/${OUT_DIR}/arch/arm64/boot/dtbo.img "$(pwd)"/anykernel/
 
 cd anykernel || exit
 zip -r9 "${ZIPNAME}" ./* -x .git .gitignore ./*.zip
-CHECKER=$(ls -l "${ZIPNAME}" | awk '{print $5}')
+CHECKER=$(find ./ -maxdepth 1 -type f -name ${ZIPNAME} -printf "%s\n")
 if (($((CHECKER / 1048576)) > 5)); then
         curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="✅Kernel compiled successfully in $((DIFF / 60)) minute(s) and $((DIFF % 60)) seconds for ${DEVICE}" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
         curl -F chat_id="${CI_CHANNEL_ID}" -F document=@"$(pwd)/${ZIPNAME}" https://api.telegram.org/bot"${BOT_API_KEY}"/sendDocument

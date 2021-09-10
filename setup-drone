@@ -25,6 +25,8 @@ elif [[ "$@" =~ "apollo"* ]]; then
         git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b apollo anykernel
 elif [[ "$@" =~ "cmi"* ]]; then
         git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b cmi anykernel
+elif [[ "$@" =~ "lmi"* ]]; then
+        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b lmi anykernel
 elif [[ "$@" =~ "umi"* ]]; then
         git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b umi anykernel
 elif [[ "$@" =~ "raphael"* ]]; then
@@ -41,5 +43,7 @@ if [[ "$@" =~ "benzoclang"* ]]; then
 elif [[ "$@" =~ "proton"* ]]; then
         git clone https://github.com/kdrag0n/proton-clang -b master --depth=1 clang
 else
-        git clone https://github.com/kdrag0n/proton-clang -b master --depth=1 clang
+        git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/ -b master --depth=1 arm64-gas
+        git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/ -b master --depth=1 arm32-gas
+        git clone https://gitlab.com/utsavbalar1231/platform_prebuilts_clang_host_linux-x86_clang-r433403/ -b master --depth=1 clang
 fi
