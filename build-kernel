@@ -209,6 +209,7 @@ if [[ "$@" =~ "proton"* ]]; then
 		make ARCH=arm64 \
 			O=${OUT_DIR} \
 			LLVM=1 \
+			CC="clang -v" \
 			CROSS_COMPILE="aarch64-linux-gnu-" \
 			CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
 			-j${KEBABS}
@@ -267,6 +268,7 @@ elif [[ "$@" =~ "aosp"* ]]; then
 		make ARCH=arm64 \
 			O=${OUT_DIR} \
 			LLVM=1 \
+			CC="clang -v" \
 			CROSS_COMPILE="aarch64-linux-gnu-" \
 			CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
 			-j${KEBABS}
