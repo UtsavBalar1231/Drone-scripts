@@ -21,9 +21,7 @@ cd /drone/src/ || exit
 HOME="/drone/src"
 
 # Export Cross Compiler name
-if [[ "$@" =~ "benzoclang"* ]]; then
-	export COMPILER="BenzoClang-13.0"
-elif [[ "$@" =~ "proton"* ]]; then
+if [[ "$@" =~ "proton"* ]]; then
 	if [[ "$@" =~ "lto"* ]]; then
 		export COMPILER="Proton clang 13.0 LTO"
 	else
@@ -99,53 +97,7 @@ curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text
 curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Build started for revision ${DRONE_BUILD_NUMBER}" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
 
 START=$(date +"%s")
-# Benzoclang
-if [[ "$@" =~ "benzoclang"* ]]; then
-	# Set compiler Path
-	PATH=${HOME}/clang/bin/:${HOME}/arm64-gcc/bin/:${HOME}/arm32-gcc/bin/:$PATH
-	# Make defconfig
-	make ARCH=arm64 \
-		O=${OUT_DIR} \
-		"${DEVICE}"_defconfig \
-		-j${KEBABS}
-
-	if [[ "$@" =~ "miui"* ]]; then
-		# Enable LLD
-		scripts/config --file ${OUT_DIR}/.config \
-			-e MIHW \
-			-e MILLET \
-			-e MI_RECLAIM \
-			-e BINDER_OPT \
-			-e KPERFEVENTS \
-			-e PERF_HUMANTASK
-
-		# Make olddefconfig
-		cd ${OUT_DIR} || exit
-		make O=${OUT_DIR} \
-			ARCH=arm64 \
-			olddefconfig
-			cd ../
-
-		sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
-		sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
-		sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
-		sed -i 's/<71>/<710>/g' arch/arm64/boot/dts/vendor/qcom/qcom/dsi-panel-j1s*
-		sed -i 's/<71>/<710>/g' arch/arm64/boot/dts/vendor/qcom/qcom/dsi-panel-j2*
-		sed -i 's/<155>/<1544>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
-		sed -i 's/<155>/<1545>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
-		sed -i 's/<155>/<1546>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
-		sed -i 's/<154>/<1537>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j1s*
-		sed -i 's/<154>/<1537>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2*
-	fi
-
-	make ARCH=arm64 \
-		O=${OUT_DIR} \
-		LLVM=1 \
-		CROSS_COMPILE="aarch64-linux-android-" \
-		CROSS_COMPILE_ARM32="arm-linux-androideabi-" \
-		-j${KEBABS}
-
-elif [[ "$@" =~ "proton"* ]]; then
+if [[ "$@" =~ "proton"* ]]; then
 	# Set compiler Path
 	PATH=${HOME}/clang/bin/:$PATH
 
@@ -155,7 +107,7 @@ elif [[ "$@" =~ "proton"* ]]; then
 		"${DEVICE}"_defconfig \
 		-j${KEBABS}
 
-	if [[ "$@" =~ "lto"* ]] && [[ ! "$@" =~ "miui"* ]]; then
+	if [[ "$@" =~ "lto"* ]]; then
 		# Enable LTO
 		scripts/config --file ${OUT_DIR}/.config \
 			-e LTO \
@@ -263,7 +215,7 @@ elif [[ "$@" =~ "proton"* ]]; then
 	fi
 else
 	# Set compiler Path
-	PATH=${HOME}/clang/bin/:${HOME}/arm64-gas/bin/:${HOME}/arm32-gas/bin/:$PATH
+	PATH=${HOME}/clang/bin:${HOME}/arm64-gas/bin:${HOME}/arm32-gas/bin:$PATH
 	# Make defconfig
 	make ARCH=arm64 \
 		O=${OUT_DIR} \
