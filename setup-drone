@@ -38,7 +38,7 @@ fi
 # Clone compiler
 if [[ "$@" =~ "proton"* ]]; then
         git clone https://github.com/kdrag0n/proton-clang -b master --depth=1 clang
-else
+elif [[ "$@" =~ "aosp"* ]]; then
         git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/ -b master --depth=1 arm64-gas
         git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/ -b master --depth=1 arm32-gas
         git clone https://gitlab.com/utsavbalar1231/platform_prebuilts_clang_host_linux-x86_clang-r433403/ -q -b master --depth=1 clang

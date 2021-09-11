@@ -213,7 +213,7 @@ if [[ "$@" =~ "proton"* ]]; then
 			CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
 			-j${KEBABS}
 	fi
-else
+elif [[ "$@" =~ "aosp"* ]]; then
 	# Set compiler Path
 	PATH=${HOME}/clang/bin:${HOME}/arm64-gas/bin:${HOME}/arm32-gas/bin:$PATH
 	# Make defconfig
