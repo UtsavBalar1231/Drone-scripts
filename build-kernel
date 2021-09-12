@@ -22,9 +22,9 @@ HOME="/drone/src"
 
 # Export Cross Compiler name
 if [[ "$@" =~ "lto"* ]]; then
-	export COMPILER="Azure clang 13.0 LTO"
+	export COMPILER="Azure clang 14.0 LTO"
 else
-	export COMPILER="Azure clang 13.0"
+	export COMPILER="Azure clang 14.0"
 fi
 
 KBUILD_COMPILER_STRING=$("$TC_DIR"/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
@@ -136,6 +136,7 @@ elif [[ "$@" =~ "lto"* ]] && [[ "$@" =~ "miui"* ]]; then
 		-e POLLY_CLANG \
 		-e TOOLS_SUPPORT_RELR \
 		-e LD_LLD \
+		-d LOCALVERSION_AUTO \
 		-e MIHW \
 		-e MILLET \
 		-e MI_RECLAIM \
@@ -151,6 +152,7 @@ elif [[ "$@" =~ "lto"* ]] && [[ "$@" =~ "miui"* ]]; then
 		-j${KEBABS}
 	cd ../
 
+	# Correct panel dimensions on MIUI builds
 	sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
 	sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
 	sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
@@ -161,6 +163,16 @@ elif [[ "$@" =~ "lto"* ]] && [[ "$@" =~ "miui"* ]]; then
 	sed -i 's/<155>/<1546>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
 	sed -i 's/<154>/<1537>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j1s*
 	sed -i 's/<154>/<1537>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2*
+
+	# Enable back mi smartfps while disabling qsync min refresh-rate
+	sed -i 's/qcom,mdss-dsi-qsync-min-refresh-rate/\/\/qcom,mdss-dsi-qsync-min-refresh-rate/g'  arch/arm64/boot/dts/vendor/qcom/dsi-panel*
+	sed -i 's/\/\/ mi,mdss-dsi-smart-fps-max_framerate/mi,mdss-dsi-smart-fps-max_framerate/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel*
+	sed -i 's/\/\/ mi,mdss-dsi-pan-enable-smart-fps/mi,mdss-dsi-pan-enable-smart-fps/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel*
+	sed -i 's/\/\/ qcom,mdss-dsi-pan-enable-smart-fps/qcom,mdss-dsi-pan-enable-smart-fps/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel*
+
+	# Enable back refresh rates support on MIUI
+	sed -i 's/120 90 60/120 90 60 50 30/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel*
+	sed -i 's/144 120 90 60/120 90 60 50 48 30/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel*
 fi
 
 if [[ "$@" =~ "raphael"* ]]; then
@@ -180,6 +192,7 @@ if [[ "$@" =~ "raphael"* ]]; then
 else
 	if [[ "$@" =~ "miui"* ]]; then
 		scripts/config --file ${OUT_DIR}/.config \
+			-d LOCALVERSION_AUTO \
 			-e MIHW \
 			-e MILLET \
 			-e MI_RECLAIM \
@@ -194,6 +207,7 @@ else
 			olddefconfig
 		cd ../
 
+		# Correct panel dimensions on MIUI builds
 		sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
 		sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
 		sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
@@ -204,6 +218,16 @@ else
 		sed -i 's/<155>/<1546>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
 		sed -i 's/<154>/<1537>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j1s*
 		sed -i 's/<154>/<1537>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2*
+
+		# Enable back mi smartfps while disabling qsync min refresh-rate
+		sed -i 's/qcom,mdss-dsi-qsync-min-refresh-rate/\/\/qcom,mdss-dsi-qsync-min-refresh-rate/g'  arch/arm64/boot/dts/vendor/qcom/dsi-panel*
+		sed -i 's/\/\/ mi,mdss-dsi-smart-fps-max_framerate/mi,mdss-dsi-smart-fps-max_framerate/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel*
+		sed -i 's/\/\/ mi,mdss-dsi-pan-enable-smart-fps/mi,mdss-dsi-pan-enable-smart-fps/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel*
+		sed -i 's/\/\/ qcom,mdss-dsi-pan-enable-smart-fps/qcom,mdss-dsi-pan-enable-smart-fps/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel*
+
+		# Enable back refresh rates support on MIUI
+		sed -i 's/120 90 60/120 90 60 50 30/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel*
+		sed -i 's/144 120 90 60/120 90 60 50 48 30/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel*
 	fi
 
 	make ARCH=arm64 \
@@ -235,3 +259,6 @@ cd "$(pwd)" || exit
 
 # Cleanup
 rm -fr anykernel/
+if [[ "$@" =~ "miui"* ]]; then
+	git reset --hard arch/arm64/boot/dts/vendor
+fi
