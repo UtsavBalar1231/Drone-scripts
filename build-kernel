@@ -156,8 +156,8 @@ elif [[ "$@" =~ "lto"* ]] && [[ "$@" =~ "miui"* ]]; then
 	sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
 	sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
 	sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
-	sed -i 's/<71>/<710>/g' arch/arm64/boot/dts/vendor/qcom/qcom/dsi-panel-j1s*
-	sed -i 's/<71>/<710>/g' arch/arm64/boot/dts/vendor/qcom/qcom/dsi-panel-j2*
+	sed -i 's/<71>/<710>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j1s*
+	sed -i 's/<71>/<710>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2*
 	sed -i 's/<155>/<1544>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
 	sed -i 's/<155>/<1545>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
 	sed -i 's/<155>/<1546>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
@@ -211,8 +211,8 @@ else
 		sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
 		sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
 		sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
-		sed -i 's/<71>/<710>/g' arch/arm64/boot/dts/vendor/qcom/qcom/dsi-panel-j1s*
-		sed -i 's/<71>/<710>/g' arch/arm64/boot/dts/vendor/qcom/qcom/dsi-panel-j2*
+		sed -i 's/<71>/<710>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j1s*
+		sed -i 's/<71>/<710>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2*
 		sed -i 's/<155>/<1544>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
 		sed -i 's/<155>/<1545>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
 		sed -i 's/<155>/<1546>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
