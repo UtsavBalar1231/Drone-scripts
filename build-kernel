@@ -260,5 +260,6 @@ cd "$(pwd)" || exit
 # Cleanup
 rm -fr anykernel/
 if [[ "$@" =~ "miui"* ]]; then
+	cd /drone/src
 	git reset --hard arch/arm64/boot/dts/vendor
 fi
