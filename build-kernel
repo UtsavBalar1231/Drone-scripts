@@ -66,7 +66,10 @@ REF=$(echo "$BRANCH" | grep -Eo "[^ /]+\$")
 
 # Select LTO or non LTO builds
 if [[ "$@" =~ "lto"* ]]; then
-	VERSION="IMMENSITY-${DEVICE^^}-${TYPE}-LTO-${DRONE_BUILD_NUMBER}-${DATE}"
+	if [[ "$@" =~ "miui"* ]]; then
+		VERSION="IMMENSITY-${DEVICE^^}-MIUI-${TYPE}-LTO-${DRONE_BUILD_NUMBER}-${DATE}"
+	else
+		VERSION="IMMENSITY-${DEVICE^^}-${TYPE}-LTO-${DRONE_BUILD_NUMBER}-${DATE}"
 else
 	VERSION="IMMENSITY-${DEVICE^^}-${TYPE}-${DRONE_BUILD_NUMBER}-${DATE}"
 fi
@@ -261,5 +264,5 @@ cd "$(pwd)" || exit
 rm -fr anykernel/
 if [[ "$@" =~ "miui"* ]]; then
 	cd /drone/src
-	git reset --hard
+	git reset --hard &> /dev/null
 fi
