@@ -145,7 +145,8 @@ elif [[ "$@" =~ "lto"* ]] && [[ "$@" =~ "miui"* ]]; then
 		-e MI_RECLAIM \
 		-e BINDER_OPT \
 		-e KPERFEVENTS \
-		-e PERF_HUMANTASK
+		-e PERF_HUMANTASK \
+		-e TASK_DELAY_ACCT \
 
 	# Make olddefconfig
 	cd ${OUT_DIR} || exit
@@ -201,7 +202,8 @@ else
 			-e MI_RECLAIM \
 			-e BINDER_OPT \
 			-e KPERFEVENTS \
-			-e PERF_HUMANTASK
+			-e PERF_HUMANTASK \
+			-e TASK_DELAY_ACCT
 
 		# Make olddefconfig
 		cd ${OUT_DIR} || exit
