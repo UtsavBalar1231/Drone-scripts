@@ -176,8 +176,10 @@ elif [[ "$@" =~ "lto"* ]] && [[ "$@" =~ "miui"* ]]; then
 	sed -i 's/\/\/ qcom,mdss-dsi-pan-enable-smart-fps/qcom,mdss-dsi-pan-enable-smart-fps/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel*
 
 	# Enable back refresh rates support on MIUI
-	sed -i 's/120 90 60/120 90 60 50 30/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel*
-	sed -i 's/144 120 90 60/120 90 60 50 48 30/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel*
+	sed -i 's/120 90 60/120 90 60 50 30/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-g7a-37-02-0a-dsc-video.dtsi
+	sed -i 's/120 90 60/120 90 60 50 30/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-g7a-37-02-0b-dsc-video.dtsi
+	sed -i 's/120 90 60/120 90 60 50 30/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-g7a-36-02-0c-dsc-video.dtsi
+	sed -i 's/144 120 90 60/120 90 60 50 48 30/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
 fi
 
 if [[ "$@" =~ "raphael"* ]]; then
@@ -232,8 +234,10 @@ else
 		sed -i 's/\/\/ qcom,mdss-dsi-pan-enable-smart-fps/qcom,mdss-dsi-pan-enable-smart-fps/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel*
 
 		# Enable back refresh rates support on MIUI
-		sed -i 's/120 90 60/120 90 60 50 30/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel*
-		sed -i 's/144 120 90 60/120 90 60 50 48 30/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel*
+		sed -i 's/120 90 60/120 90 60 50 30/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-g7a-37-02-0a-dsc-video.dtsi
+		sed -i 's/120 90 60/120 90 60 50 30/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-g7a-37-02-0b-dsc-video.dtsi
+		sed -i 's/120 90 60/120 90 60 50 30/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-g7a-36-02-0c-dsc-video.dtsi
+		sed -i 's/144 120 90 60/120 90 60 50 48 30/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
 	fi
 
 	make ARCH=arm64 \
