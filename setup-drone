@@ -39,4 +39,9 @@ fi
 rm -fr anykernel/.git
 
 # Clone compiler
-git clone https://gitlab.com/Panchajanya1999/azure-clang -b main --depth=1 clang
+if [[ "$@" =~ "gcc"* ]]; then
+	git clone --depth=1 https://github.com/mvaisakh/gcc-arm64 --depth=1 gcc64
+	git clone --depth=1 https://github.com/mvaisakh/gcc-arm --depth=1 gcc32
+else
+	git clone https://gitlab.com/Panchajanya1999/azure-clang -b main --depth=1 clang
+fi

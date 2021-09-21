@@ -21,13 +21,25 @@ cd /drone/src/ || exit
 HOME="/drone/src"
 
 # Export Cross Compiler name
-if [[ "$@" =~ "lto"* ]]; then
-	export COMPILER="Azure clang 14.0 LTO"
+if [[ "$@" =~ "gcc"* ]]; then
+	if [[ "$@" =~ "lto"* ]]; then
+		export COMPILER="Bare Metal Eva GCC LTO"
+	else
+		export COMPILER="Bare Metal Eva GCC"
+	fi
 else
-	export COMPILER="Azure clang 14.0"
+	if [[ "$@" =~ "lto"* ]]; then
+		export COMPILER="Azure clang 14.0 LTO"
+	else
+		export COMPILER="Azure clang 14.0"
+	fi
 fi
 
-KBUILD_COMPILER_STRING=$("$TC_DIR"/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
+if [[ "$@" =~ "gcc"* ]]; then
+	KBUILD_COMPILER_STRING=$("${HOME}"/gcc64/bin/aarch64-elf-gcc --version | head -n 1)
+else
+	KBUILD_COMPILER_STRING=$("${HOME}"/clang/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
+fi
 
 #
 # Enviromental Variables
@@ -164,84 +176,116 @@ curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text
 
 START=$(date +"%s")
 
-# Set compiler Path
-PATH=${HOME}/clang/bin/:$PATH
+if [[ "$@" =~ "gcc"* ]]; then
+	# Set compiler Path
+	PATH=${HOME}/gcc64/bin/:${HOME}/gcc32/bin/:$PATH
 
-# Make defconfig
-make ARCH=arm64 \
-	O=${OUT_DIR} \
-	"${DEVICE}"_defconfig \
-	-j${KEBABS}
-
-if [[ "$@" =~ "lto"* ]]; then
-	# Enable LTO
-	scripts/config --file ${OUT_DIR}/.config \
-		-e LTO \
-		-e LTO_CLANG \
-		-d THINLTO \
-		-e SHADOW_CALL_STACK \
-		-e POLLY_CLANG \
-		-e TOOLS_SUPPORT_RELR \
-		-e LD_LLD
-
-	# Make olddefconfig
-	cd ${OUT_DIR} || exit
-	make O=${OUT_DIR} \
-		ARCH=arm64 \
-		olddefconfig \
-		-j${KEBABS}
-		cd ../
-
-elif [[ "$@" =~ "lto"* ]] && [[ "$@" =~ "miui"* ]]; then
-	# Enable LTO
-	scripts/config --file ${OUT_DIR}/.config \
-		-e LTO \
-		-e LTO_CLANG \
-		-d THINLTO \
-		-e SHADOW_CALL_STACK \
-		-e POLLY_CLANG \
-		-e TOOLS_SUPPORT_RELR \
-		-e LD_LLD \
-		-d LOCALVERSION_AUTO \
-		-e MIHW \
-		-e MILLET \
-		-e MI_RECLAIM \
-		-e BINDER_OPT \
-		-e KPERFEVENTS \
-		-e PERF_HUMANTASK \
-		-e TASK_DELAY_ACCT \
-
-	# Make olddefconfig
-	cd ${OUT_DIR} || exit
-	make O=${OUT_DIR} \
-		ARCH=arm64 \
-		olddefconfig \
-		-j${KEBABS}
-	cd ../
-
-	miui_fix_dimens
-	miui_fix_fps
-	miui_fix_dfps
-	miui_fix_fod
-fi
-
-if [[ "$@" =~ "raphael"* ]]; then
+	# Make defconfig
 	make ARCH=arm64 \
 		O=${OUT_DIR} \
-		CC="clang" \
-		AR="llvm-ar" \
-		NM="llvm-nm" \
-		OBJCOPY="llvm-objcopy" \
-		OBJDUMP="llvm-objdump" \
-		STRIP="llvm-strip" \
-		LD="ld.lld" \
-		CLANG_TRIPLE="aarch64-linux-gnu-" \
-		CROSS_COMPILE="aarch64-linux-gnu-" \
-		CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
+		"${DEVICE}"_defconfig \
 		-j${KEBABS}
-else
-	if [[ "$@" =~ "miui"* ]]; then
+
+	# Disable fortify source
+	scripts/config --file ${OUT_DIR}/.config \
+		-d FORTIFY_SOURCE
+
+	# Make olddefconfig
+	cd ${OUT_DIR} || exit
+	make O=${OUT_DIR} \
+		ARCH=arm64 \
+		olddefconfig
+	cd ../
+
+	if [[ "$@" =~ "lto"* ]]; then
+		# Enable GCC LTO
 		scripts/config --file ${OUT_DIR}/.config \
+			-e LTO_GCC
+
+		# Make olddefconfig
+		cd ${OUT_DIR} || exit
+		make O=${OUT_DIR} \
+			ARCH=arm64 \
+			olddefconfig
+		cd ../
+	fi
+
+	if [[ "$@" =~ "raphael"* ]]; then
+		make ARCH=arm64 \
+			O=${OUT_DIR} \
+			CROSS_COMPILE="aarch64-elf-" \
+			CROSS_COMPILE_ARM32="arm-eabi-" \
+			-j${KEBABS}
+	else
+		if [[ "$@" =~ "miui"* ]]; then
+			scripts/config --file ${OUT_DIR}/.config \
+				-d LOCALVERSION_AUTO \
+				-e MIHW \
+				-e MILLET \
+				-e MI_RECLAIM \
+				-e BINDER_OPT \
+				-e KPERFEVENTS \
+				-e PERF_HUMANTASK \
+				-e TASK_DELAY_ACCT
+
+			# Make olddefconfig
+			cd ${OUT_DIR} || exit
+			make O=${OUT_DIR} \
+				ARCH=arm64 \
+				olddefconfig
+			cd ../
+
+			miui_fix_dimens
+			miui_fix_fps
+			miui_fix_dfps
+			miui_fix_fod
+		fi
+
+		make ARCH=arm64 \
+			O=${OUT_DIR} \
+			CROSS_COMPILE="aarch64-elf-" \
+			CROSS_COMPILE_ARM32="arm-eabi-" \
+			-j${KEBABS}
+	fi
+else
+	# Set compiler Path
+	PATH=${HOME}/clang/bin/:$PATH
+
+	# Make defconfig
+	make ARCH=arm64 \
+		O=${OUT_DIR} \
+		"${DEVICE}"_defconfig \
+		-j${KEBABS}
+
+	if [[ "$@" =~ "lto"* ]]; then
+		# Enable LTO
+		scripts/config --file ${OUT_DIR}/.config \
+			-e LTO \
+			-e LTO_CLANG \
+			-d THINLTO \
+			-e SHADOW_CALL_STACK \
+			-e POLLY_CLANG \
+			-e TOOLS_SUPPORT_RELR \
+			-e LD_LLD
+
+		# Make olddefconfig
+		cd ${OUT_DIR} || exit
+		make O=${OUT_DIR} \
+			ARCH=arm64 \
+			olddefconfig \
+			-j${KEBABS}
+			cd ../
+
+	elif [[ "$@" =~ "lto"* ]] && [[ "$@" =~ "miui"* ]]; then
+		# Enable LTO
+		scripts/config --file ${OUT_DIR}/.config \
+			-e LTO \
+			-e LTO_CLANG \
+			-d THINLTO \
+			-e SHADOW_CALL_STACK \
+			-e POLLY_CLANG \
+			-e TOOLS_SUPPORT_RELR \
+			-e LD_LLD \
 			-d LOCALVERSION_AUTO \
 			-e MIHW \
 			-e MILLET \
@@ -249,13 +293,14 @@ else
 			-e BINDER_OPT \
 			-e KPERFEVENTS \
 			-e PERF_HUMANTASK \
-			-e TASK_DELAY_ACCT
+			-e TASK_DELAY_ACCT \
 
 		# Make olddefconfig
 		cd ${OUT_DIR} || exit
 		make O=${OUT_DIR} \
 			ARCH=arm64 \
-			olddefconfig
+			olddefconfig \
+			-j${KEBABS}
 		cd ../
 
 		miui_fix_dimens
@@ -264,12 +309,52 @@ else
 		miui_fix_fod
 	fi
 
-	make ARCH=arm64 \
-		O=${OUT_DIR} \
-		LLVM=1 \
-		CROSS_COMPILE="aarch64-linux-gnu-" \
-		CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
-		-j${KEBABS}
+	if [[ "$@" =~ "raphael"* ]]; then
+		make ARCH=arm64 \
+			O=${OUT_DIR} \
+			CC="clang" \
+			AR="llvm-ar" \
+			NM="llvm-nm" \
+			OBJCOPY="llvm-objcopy" \
+			OBJDUMP="llvm-objdump" \
+			STRIP="llvm-strip" \
+			LD="ld.lld" \
+			CLANG_TRIPLE="aarch64-linux-gnu-" \
+			CROSS_COMPILE="aarch64-linux-gnu-" \
+			CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
+			-j${KEBABS}
+	else
+		if [[ "$@" =~ "miui"* ]]; then
+			scripts/config --file ${OUT_DIR}/.config \
+				-d LOCALVERSION_AUTO \
+				-e MIHW \
+				-e MILLET \
+				-e MI_RECLAIM \
+				-e BINDER_OPT \
+				-e KPERFEVENTS \
+				-e PERF_HUMANTASK \
+				-e TASK_DELAY_ACCT
+
+			# Make olddefconfig
+			cd ${OUT_DIR} || exit
+			make O=${OUT_DIR} \
+				ARCH=arm64 \
+				olddefconfig
+			cd ../
+
+			miui_fix_dimens
+			miui_fix_fps
+			miui_fix_dfps
+			miui_fix_fod
+		fi
+
+		make ARCH=arm64 \
+			O=${OUT_DIR} \
+			LLVM=1 \
+			CROSS_COMPILE="aarch64-linux-gnu-" \
+			CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
+			-j${KEBABS}
+	fi
 fi
 
 END=$(date +"%s")
