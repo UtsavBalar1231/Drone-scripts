@@ -132,30 +132,7 @@ function miui_fix_dfps()
 # Enable back brightness control from dtsi
 function miui_fix_fod()
 {
-	sed -i 's/\/\/39 01 00 00 01 00 03 51 03 FF/39 01 00 00 01 00 03 51 03 FF/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
-	sed -i 's/\/\/39 01 00 00 00 00 03 51 03 FF/39 01 00 00 00 00 03 51 03 FF/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
-	sed -i 's/\/\/39 00 00 00 00 00 05 51 0F 8F 00 00/39 00 00 00 00 00 05 51 0F 8F 00 00/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j1s-42-02-0a-dsc-cmd.dtsi
-	sed -i 's/\/\/39 01 00 00 00 00 05 51 07 FF 00 00/39 01 00 00 00 00 05 51 07 FF 00 00/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j1s-42-02-0a-dsc-cmd.dtsi
-	sed -i 's/\/\/39 00 00 00 00 00 05 51 0F 8F 00 00/39 00 00 00 00 00 05 51 0F 8F 00 00/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j1s-42-02-0a-mp-dsc-cmd.dtsi
-	sed -i 's/\/\/39 01 00 00 00 00 05 51 07 FF 00 00/39 01 00 00 00 00 05 51 07 FF 00 00/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j1s-42-02-0a-mp-dsc-cmd.dtsi
-	sed -i 's/\/\/39 01 00 00 00 00 03 51 0F FF/39 01 00 00 00 00 03 51 0F FF/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j1u-42-02-0b-dsc-cmd.dtsi
-	sed -i 's/\/\/39 01 00 00 00 00 03 51 07 FF/39 01 00 00 00 00 03 51 07 FF/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j1u-42-02-0b-dsc-cmd.dtsi
-	sed -i 's/\/\/39 01 00 00 00 00 03 51 00 00/39 01 00 00 00 00 03 51 00 00/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2-38-0c-0a-dsc-cmd.dtsi
-	sed -i 's/\/\/39 01 00 00 00 00 03 51 00 00/39 01 00 00 00 00 03 51 00 00/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2-38-0c-0a-dsc-cmd.dtsi
-	sed -i 's/\/\/39 01 00 00 00 00 03 51 0F FF/39 01 00 00 00 00 03 51 0F FF/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2-42-02-0b-dsc-cmd.dtsi
-	sed -i 's/\/\/39 01 00 00 00 00 03 51 07 FF/39 01 00 00 00 00 03 51 07 FF/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2-42-02-0b-dsc-cmd.dtsi
-	sed -i 's/\/\/39 00 00 00 00 00 05 51 0F 8F 00 00/39 00 00 00 00 00 05 51 0F 8F 00 00/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2-mp-42-02-0b-dsc-cmd.dtsi
-	sed -i 's/\/\/39 01 00 00 00 00 05 51 07 FF 00 00/39 01 00 00 00 00 05 51 07 FF 00 00/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2-mp-42-02-0b-dsc-cmd.dtsi
-	sed -i 's/\/\/39 01 00 00 00 00 03 51 0F FF/39 01 00 00 00 00 03 51 0F FF/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2-p1-42-02-0b-dsc-cmd.dtsi
-	sed -i 's/\/\/39 01 00 00 00 00 03 51 07 FF/39 01 00 00 00 00 03 51 07 FF/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2-p1-42-02-0b-dsc-cmd.dtsi
-	sed -i 's/\/\/39 00 00 00 00 00 03 51 0D FF/39 00 00 00 00 00 03 51 0D FF/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2-p2-1-38-0c-0a-dsc-cmd.dtsi
-	sed -i 's/\/\/39 01 00 00 11 00 03 51 03 FF/39 01 00 00 11 00 03 51 03 FF/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2-p2-1-38-0c-0a-dsc-cmd.dtsi
-	sed -i 's/\/\/39 00 00 00 00 00 05 51 0F 8F 00 00/39 00 00 00 00 00 05 51 0F 8F 00 00/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2-p2-1-42-02-0b-dsc-cmd.dtsi
-	sed -i 's/\/\/39 01 00 00 00 00 05 51 07 FF 00 00/39 01 00 00 00 00 05 51 07 FF 00 00/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2-p2-1-42-02-0b-dsc-cmd.dtsi
-	sed -i 's/\/\/39 00 00 00 00 00 05 51 0F 8F 00 00/39 00 00 00 00 00 05 51 0F 8F 00 00/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2s-mp-42-02-0a-dsc-cmd.dtsi
-	sed -i 's/\/\/39 01 00 00 00 00 05 51 07 FF 00 00/39 01 00 00 00 00 05 51 07 FF 00 00/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2s-mp-42-02-0a-dsc-cmd.dtsi
-	sed -i 's/\/\/39 00 00 00 00 00 03 51 03 FF/39 00 00 00 00 00 03 51 03 FF/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j9-38-0a-0a-fhd-video.dtsi
-	sed -i 's/\/\/39 01 00 00 00 00 03 51 03 FF/39 01 00 00 00 00 03 51 03 FF/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j9-38-0a-0a-fhd-video.dtsi
+	sed -i 's/\/\/ mi,mdss-dsi-panel-fod-dimlayer-enabled/mi,mdss-dsi-panel-fod-dimlayer-enabled/g' qcom/dsi-panel*
 }
 
 # Post to CI channel
