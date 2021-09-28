@@ -214,6 +214,7 @@ if [[ "$@" =~ "gcc"* ]]; then
 		make ARCH=arm64 \
 			O=${OUT_DIR} \
 			CROSS_COMPILE="aarch64-elf-" \
+			LD="aarch64-elf-ld.bfd"
 			CROSS_COMPILE_ARM32="arm-eabi-" \
 			-j${KEBABS}
 	else
