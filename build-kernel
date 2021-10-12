@@ -20,21 +20,6 @@ cd /drone/src/ || exit
 
 HOME="/drone/src"
 
-# Export Cross Compiler name
-if [[ "$@" =~ "gcc"* ]]; then
-	if [[ "$@" =~ "lto"* ]]; then
-		export COMPILER="Bare Metal Eva GCC LTO"
-	else
-		export COMPILER="Bare Metal Eva GCC"
-	fi
-else
-	if [[ "$@" =~ "lto"* ]]; then
-		export COMPILER="Azure clang 14.0 LTO"
-	else
-		export COMPILER="Azure clang 14.0"
-	fi
-fi
-
 if [[ "$@" =~ "gcc"* ]]; then
 	KBUILD_COMPILER_STRING=$("${HOME}"/gcc64/bin/aarch64-elf-gcc --version | head -n 1)
 else
@@ -58,11 +43,7 @@ COMMIT=$(git rev-parse --short HEAD)
 DATE=$(date +"%d.%m.%y")
 
 # Set Kernel link
-if [[ "$@" =~ "raphael"* ]]; then
-	KERNEL_LINK=https://github.com/UtsavBalar1231/kernel_xiaomi_raphael
-else
-	KERNEL_LINK=https://github.com/UtsavBalar1231/kernel_xiaomi_sm8250
-fi
+KERNEL_LINK=https://github.com/UtsavBalar1231/kernel_samsung_universal9611
 
 # Set Kernel Version
 KERNELVER=$(make kernelversion)
@@ -78,11 +59,7 @@ REF=$(echo "$BRANCH" | grep -Eo "[^ /]+\$")
 
 # Select LTO or non LTO builds
 if [[ "$@" =~ "lto"* ]]; then
-	if [[ "$@" =~ "miui"* ]]; then
-		VERSION="IMMENSITY-${DEVICE^^}-MIUI-${TYPE}-LTO-${DRONE_BUILD_NUMBER}-${DATE}"
-	else
-		VERSION="IMMENSITY-${DEVICE^^}-${TYPE}-LTO-${DRONE_BUILD_NUMBER}-${DATE}"
-	fi
+	VERSION="IMMENSITY-${DEVICE^^}-${TYPE}-LTO-${DRONE_BUILD_NUMBER}-${DATE}"
 else
 	VERSION="IMMENSITY-${DEVICE^^}-${TYPE}-${DRONE_BUILD_NUMBER}-${DATE}"
 fi
@@ -95,45 +72,6 @@ if [[ -z "${KEBABS}" ]]; then
 	COUNT="$(grep -c '^processor' /proc/cpuinfo)"
 	export KEBABS="$((COUNT * 2))"
 fi
-
-# Correct panel dimensions on MIUI builds
-function miui_fix_dimens()
-{
-	sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
-	sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
-	sed -i 's/<70>/<695>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
-	sed -i 's/<71>/<710>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j1s*
-	sed -i 's/<71>/<710>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2*
-	sed -i 's/<155>/<1544>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
-	sed -i 's/<155>/<1545>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
-	sed -i 's/<155>/<1546>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
-	sed -i 's/<154>/<1537>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j1s*
-	sed -i 's/<154>/<1537>/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j2*
-}
-
-# Enable back mi smartfps while disabling qsync min refresh-rate
-function miui_fix_fps()
-{
-	sed -i 's/qcom,mdss-dsi-qsync-min-refresh-rate/\/\/qcom,mdss-dsi-qsync-min-refresh-rate/g'  arch/arm64/boot/dts/vendor/qcom/dsi-panel*
-	sed -i 's/\/\/ mi,mdss-dsi-smart-fps-max_framerate/mi,mdss-dsi-smart-fps-max_framerate/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel*
-	sed -i 's/\/\/ mi,mdss-dsi-pan-enable-smart-fps/mi,mdss-dsi-pan-enable-smart-fps/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel*
-	sed -i 's/\/\/ qcom,mdss-dsi-pan-enable-smart-fps/qcom,mdss-dsi-pan-enable-smart-fps/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel*
-}
-
-# Enable back refresh rates supported on MIUI
-function miui_fix_dfps()
-{
-	sed -i 's/120 90 60/120 90 60 50 30/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-g7a-37-02-0a-dsc-video.dtsi
-	sed -i 's/120 90 60/120 90 60 50 30/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-g7a-37-02-0b-dsc-video.dtsi
-	sed -i 's/120 90 60/120 90 60 50 30/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-g7a-36-02-0c-dsc-video.dtsi
-	sed -i 's/144 120 90 60/144 120 90 60 50 48 30/g' arch/arm64/boot/dts/vendor/qcom/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
-}
-
-# Enable back brightness control from dtsi
-function miui_fix_fod()
-{
-	sed -i 's/\/\/ mi,mdss-dsi-panel-fod-dimlayer-enabled/mi,mdss-dsi-panel-fod-dimlayer-enabled/g' qcom/dsi-panel*
-}
 
 # Post to CI channel
 curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendPhoto -d photo=https://github.com/UtsavBalar1231/xda-stuff/raw/master/banner.png -d chat_id="${CI_CHANNEL_ID}"
@@ -148,7 +86,7 @@ curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text
 <code>-----------------------------------------------------------</code>
 
 <i>• Build started on Drone Cloud...</i>
-• <a href='https://cloud.drone.io/UtsavBalar1231/kernel_xiaomi_sm8250/${DRONE_BUILD_NUMBER}'>Check the build status here</a>" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
+• <a href='https://cloud.drone.io/UtsavBalar1231/kernel_samsung_universal9611/${DRONE_BUILD_NUMBER}'>Check the build status here</a>" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
 curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Build started for revision ${DRONE_BUILD_NUMBER}" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
 
 START=$(date +"%s")
@@ -187,47 +125,14 @@ if [[ "$@" =~ "gcc"* ]]; then
 		cd ../
 	fi
 
-	if [[ "$@" =~ "raphael"* ]]; then
-		make ARCH=arm64 \
-			O=${OUT_DIR} \
-			CROSS_COMPILE="aarch64-elf-" \
-			LD="aarch64-elf-ld.bfd"
-			CROSS_COMPILE_ARM32="arm-eabi-" \
-			-j${KEBABS}
-	else
-		if [[ "$@" =~ "miui"* ]]; then
-			scripts/config --file ${OUT_DIR}/.config \
-				-d LOCALVERSION_AUTO \
-				-e MIHW \
-				-e MILLET \
-				-e MI_RECLAIM \
-				-e BINDER_OPT \
-				-e KPERFEVENTS \
-				-e PERF_HUMANTASK \
-				-e TASK_DELAY_ACCT
-
-			# Make olddefconfig
-			cd ${OUT_DIR} || exit
-			make O=${OUT_DIR} \
-				ARCH=arm64 \
-				olddefconfig
-			cd ../
-
-			miui_fix_dimens
-			miui_fix_fps
-			miui_fix_dfps
-			miui_fix_fod
-		fi
-
-		make ARCH=arm64 \
-			O=${OUT_DIR} \
-			CROSS_COMPILE="aarch64-elf-" \
-			CROSS_COMPILE_ARM32="arm-eabi-" \
-			-j${KEBABS}
-	fi
+	make ARCH=arm64 \
+		O=${OUT_DIR} \
+		CROSS_COMPILE="aarch64-elf-" \
+		CROSS_COMPILE_ARM32="arm-eabi-" \
+		-j${KEBABS}
 else
 	# Set compiler Path
-	PATH=${HOME}/clang/bin/:$PATH
+	PATH=${HOME}/clang/bin/:${HOME}/gcc64/bin/:$PATH
 
 	# Make defconfig
 	make ARCH=arm64 \
@@ -253,92 +158,17 @@ else
 			olddefconfig \
 			-j${KEBABS}
 			cd ../
-
-	elif [[ "$@" =~ "lto"* ]] && [[ "$@" =~ "miui"* ]]; then
-		# Enable LTO
-		scripts/config --file ${OUT_DIR}/.config \
-			-e LTO \
-			-e LTO_CLANG \
-			-d THINLTO \
-			-e SHADOW_CALL_STACK \
-			-e POLLY_CLANG \
-			-e TOOLS_SUPPORT_RELR \
-			-e LD_LLD \
-			-d LOCALVERSION_AUTO \
-			-e MIHW \
-			-e MILLET \
-			-e MI_RECLAIM \
-			-e BINDER_OPT \
-			-e KPERFEVENTS \
-			-e PERF_HUMANTASK \
-			-e TASK_DELAY_ACCT \
-
-		# Make olddefconfig
-		cd ${OUT_DIR} || exit
-		make O=${OUT_DIR} \
-			ARCH=arm64 \
-			olddefconfig \
-			-j${KEBABS}
-		cd ../
-
-		miui_fix_dimens
-		miui_fix_fps
-		miui_fix_dfps
-		miui_fix_fod
 	fi
-
-	if [[ "$@" =~ "raphael"* ]]; then
 		make ARCH=arm64 \
 			O=${OUT_DIR} \
 			CC="clang" \
-			AR="llvm-ar" \
-			NM="llvm-nm" \
-			OBJCOPY="llvm-objcopy" \
-			OBJDUMP="llvm-objdump" \
-			STRIP="llvm-strip" \
-			LD="ld.lld" \
 			CLANG_TRIPLE="aarch64-linux-gnu-" \
-			CROSS_COMPILE="aarch64-linux-gnu-" \
-			CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
+			CROSS_COMPILE="aarch64-linux-android-" \
 			-j${KEBABS}
-	else
-		if [[ "$@" =~ "miui"* ]]; then
-			scripts/config --file ${OUT_DIR}/.config \
-				-d LOCALVERSION_AUTO \
-				-e MIHW \
-				-e MILLET \
-				-e MI_RECLAIM \
-				-e BINDER_OPT \
-				-e KPERFEVENTS \
-				-e PERF_HUMANTASK \
-				-e TASK_DELAY_ACCT
-
-			# Make olddefconfig
-			cd ${OUT_DIR} || exit
-			make O=${OUT_DIR} \
-				ARCH=arm64 \
-				olddefconfig
-			cd ../
-
-			miui_fix_dimens
-			miui_fix_fps
-			miui_fix_dfps
-			miui_fix_fod
-		fi
-
-		make ARCH=arm64 \
-			O=${OUT_DIR} \
-			LLVM=1 \
-			CROSS_COMPILE="aarch64-linux-gnu-" \
-			CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
-			-j${KEBABS}
-	fi
 fi
 
 END=$(date +"%s")
 DIFF=$((END - START))
-
-find ${OUT_DIR}/arch/arm64/boot/dts/vendor/qcom -name '*.dtb' -exec cat {} + > ${OUT_DIR}/arch/arm64/boot/dtb
 
 # Import Anykernel3 folder
 cp "$(pwd)"/${OUT_DIR}/arch/arm64/boot/Image.gz "$(pwd)"/anykernel/
@@ -359,6 +189,3 @@ cd "$(pwd)" || exit
 
 # Cleanup
 rm -fr anykernel/
-if [[ "$@" =~ "miui"* ]]; then
-	git checkout arch/arm64/boot/dts/vendor &> /dev/null
-fi

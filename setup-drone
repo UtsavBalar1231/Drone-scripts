@@ -19,21 +19,7 @@
 cd /drone/src/ || exit
 
 # Anykernel3
-if [[ "$@" =~ "alioth"* ]]; then
-        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b alioth anykernel
-elif [[ "$@" =~ "apollo"* ]]; then
-        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b apollo anykernel
-elif [[ "$@" =~ "cmi"* ]]; then
-        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b cmi anykernel
-elif [[ "$@" =~ "lmi"* ]]; then
-        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b lmi anykernel
-elif [[ "$@" =~ "umi"* ]]; then
-        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b umi anykernel
-elif [[ "$@" =~ "raphael"* ]]; then
-        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b master anykernel
-else
-        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b alioth anykernel
-fi
+git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b exynos anykernel
 
 ## Remove .git
 rm -fr anykernel/.git
@@ -43,5 +29,6 @@ if [[ "$@" =~ "gcc"* ]]; then
 	git clone --depth=1 https://github.com/mvaisakh/gcc-arm64 --depth=1 gcc64
 	git clone --depth=1 https://github.com/mvaisakh/gcc-arm --depth=1 gcc32
 else
-	git clone https://gitlab.com/Panchajanya1999/azure-clang -b main --depth=1 clang
+	git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b ndk-release-r18 gcc64 --depth=1
+	git clone https://github.com/crdroidandroid/android_prebuilts_clang_host_linux-x86_clang-7095922 -b 11.0 clang --depth=1
 fi
