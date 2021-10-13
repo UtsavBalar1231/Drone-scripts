@@ -30,6 +30,9 @@ fi
 # Enviromental Variables
 #
 
+export PLATFORM_VERSION=11
+export ANDROID_MAJOR_VERSION=r
+
 # Set the last commit author
 AUTHOR=$(git log -n 1 --pretty=format:'%an')
 
