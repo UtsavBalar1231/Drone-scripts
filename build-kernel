@@ -172,8 +172,8 @@ DIFF=$((END - START))
 
 # Import Anykernel3 folder
 cp "$(pwd)"/${OUT_DIR}/arch/arm64/boot/Image.gz "$(pwd)"/anykernel/
-cp "$(pwd)"/${OUT_DIR}/arch/arm64/boot/dtb "$(pwd)"/anykernel/
-cp "$(pwd)"/${OUT_DIR}/arch/arm64/boot/dtbo.img "$(pwd)"/anykernel/
+cp "$(pwd)"/${OUT_DIR}/arch/arm64/boot/dtb_exynos.img "$(pwd)"/anykernel/dtb
+cp "$(pwd)"/${OUT_DIR}/arch/arm64/boot/dtbo_exynos.img "$(pwd)"/anykernel/dtbo.img
 
 cd anykernel || exit
 zip -r9 "${ZIPNAME}" ./* -x .git .gitignore ./*.zip
