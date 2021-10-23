@@ -42,6 +42,8 @@ BRANCH=$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)
 # Set the last commit sha
 COMMIT=$(git rev-parse --short HEAD)
 
+COMPILER="AOSP Clang 12.0"
+
 # Set current date
 DATE=$(date +"%d.%m.%y")
 
