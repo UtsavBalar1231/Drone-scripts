@@ -144,6 +144,8 @@ if [[ "$@" =~ "gcc"* ]]; then
 else
 	# Set compiler Path
 	PATH=${HOME}/clang/bin/:${HOME}/gcc64/bin/:$PATH
+	LD_LIBRARY_PATH=${HOME}/clang/lib64:$LD_LIBRARY_PATH
+	export LD_LIBRARY_PATH
 
 	# Make defconfig
 	make ARCH=arm64 \
