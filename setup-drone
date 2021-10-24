@@ -30,5 +30,5 @@ if [[ "$@" =~ "gcc"* ]]; then
 	git clone --depth=1 https://github.com/mvaisakh/gcc-arm --depth=1 gcc32
 else
 	git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b ndk-release-r18 gcc64 --depth=1
-	mkdir -p clang && wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/master/clang-r433403b.tar.gz && tar -xzvf *.tar.gz -C clang && rm *.tar.gz
+	git clone https://github.com/crdroidandroid/android_prebuilts_clang_host_linux-x86_clang-r416183b1 -b 11.0 --depth=1 clang
 fi

@@ -76,6 +76,7 @@ export ZIPNAME="${VERSION}.zip"
 if [[ -z "${KEBABS}" ]]; then
 	COUNT="$(grep -c '^processor' /proc/cpuinfo)"
 	export KEBABS="$((COUNT * 2))"
+	echo KEBABS
 fi
 
 # Post to CI channel
