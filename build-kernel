@@ -176,6 +176,12 @@ else
 		make ARCH=arm64 \
 			O=${OUT_DIR} \
 			CC="clang" \
+			LD="ld.lld" \
+			AR="llvm-ar" \
+			NM="llvm-nm" \
+			OBJCOPY="llvm-objcopy" \
+			OBJDUMP="llvm-objdump" \
+			STRIP="llvm-strip" \
 			CLANG_TRIPLE="aarch64-linux-gnu-" \
 			CROSS_COMPILE="aarch64-linux-android-" \
 			-j${KEBABS}
