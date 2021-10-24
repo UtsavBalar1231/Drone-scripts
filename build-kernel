@@ -161,6 +161,7 @@ else
 			-d THINLTO \
 			-e SHADOW_CALL_STACK \
 			-e POLLY_CLANG \
+			-e RELR \
 			-e TOOLS_SUPPORT_RELR \
 			-e LD_LLD
 
