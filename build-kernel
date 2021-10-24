@@ -42,7 +42,12 @@ BRANCH=$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)
 # Set the last commit sha
 COMMIT=$(git rev-parse --short HEAD)
 
+# Set compiler name
 COMPILER="AOSP Clang 12.0"
+
+# Set build host
+KBUILD_BUILD_USER: UtsavTheCunt
+KBUILD_BUILD_HOST: CuntsSpace
 
 # Set current date
 DATE=$(date +"%d.%m.%y")
@@ -177,7 +182,7 @@ END=$(date +"%s")
 DIFF=$((END - START))
 
 # Import Anykernel3 folder
-cp "$(pwd)"/${OUT_DIR}/arch/arm64/boot/Image.gz "$(pwd)"/anykernel/
+cp "$(pwd)"/${OUT_DIR}/arch/arm64/boot/Image "$(pwd)"/anykernel/
 cp "$(pwd)"/${OUT_DIR}/arch/arm64/boot/dtb_exynos.img "$(pwd)"/anykernel/dtb
 cp "$(pwd)"/${OUT_DIR}/arch/arm64/boot/dtbo_exynos.img "$(pwd)"/anykernel/dtbo.img
 
