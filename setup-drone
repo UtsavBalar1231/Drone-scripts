@@ -29,6 +29,7 @@ if [[ "$@" =~ "gcc"* ]]; then
 	git clone --depth=1 https://github.com/mvaisakh/gcc-arm64 --depth=1 gcc64
 	git clone --depth=1 https://github.com/mvaisakh/gcc-arm --depth=1 gcc32
 else
-	git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b ndk-release-r18 gcc64 --depth=1
+	git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9 -b lineage-18.1 --depth=1 gcc32
+	git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 -b lineage-18.1 --depth=1 gcc64
 	git clone https://github.com/crdroidandroid/android_prebuilts_clang_host_linux-x86_clang-r416183b1 -b 11.0 --depth=1 clang
 fi

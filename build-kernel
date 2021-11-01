@@ -143,7 +143,7 @@ if [[ "$@" =~ "gcc"* ]]; then
 		-j${KEBABS}
 else
 	# Set compiler Path
-	PATH=${HOME}/clang/bin/:${HOME}/gcc64/bin/:$PATH
+	PATH=${HOME}/clang/bin/:${HOME}/gcc64/bin/:${HOME}/gcc32/bin/:$PATH
 	LD_LIBRARY_PATH=${HOME}/clang/lib64:$LD_LIBRARY_PATH
 	export LD_LIBRARY_PATH
 
@@ -184,6 +184,7 @@ else
 			STRIP="llvm-strip" \
 			CLANG_TRIPLE="aarch64-linux-gnu-" \
 			CROSS_COMPILE="aarch64-linux-android-" \
+			CROSS_COMPILE_ARM32="arm-linux-androideabi-" \
 			-j${KEBABS}
 fi
 
