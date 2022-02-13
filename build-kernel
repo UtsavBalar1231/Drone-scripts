@@ -2,7 +2,7 @@
 # shellcheck disable=SC2199
 # shellcheck source=/dev/null
 #
-# Copyright (C) 2020-21 UtsavBalar1231 <utsavbalar1231@gmail.com>
+# Copyright (C) 2020-22 UtsavBalar1231 <utsavbalar1231@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,22 +18,8 @@
 
 cd /drone/src/ || exit
 
-HOME="/drone/src"
-
-# Export Cross Compiler name
-if [[ "$@" =~ "gcc"* ]]; then
-	if [[ "$@" =~ "lto"* ]]; then
-		export COMPILER="Bare Metal Eva GCC LTO"
-	else
-		export COMPILER="Bare Metal Eva GCC"
-	fi
-else
-	if [[ "$@" =~ "lto"* ]]; then
-		export COMPILER="Azure clang 14.0 LTO"
-	else
-		export COMPILER="Azure clang 14.0"
-	fi
-fi
+# test
+echo $HOME
 
 if [[ "$@" =~ "gcc"* ]]; then
 	KBUILD_COMPILER_STRING=$("${HOME}"/gcc64/bin/aarch64-elf-gcc --version | head -n 1)
@@ -79,12 +65,12 @@ REF=$(echo "$BRANCH" | grep -Eo "[^ /]+\$")
 # Select LTO or non LTO builds
 if [[ "$@" =~ "lto"* ]]; then
 	if [[ "$@" =~ "miui"* ]]; then
-		VERSION="IMMENSITY-${DEVICE^^}-MIUI-${TYPE}-LTO-${DRONE_BUILD_NUMBER}-${DATE}"
+		VERSION="IMMENSITY-X-${DEVICE^^}-MIUI-${TYPE}-LTO-${DRONE_BUILD_NUMBER}-${DATE}"
 	else
-		VERSION="IMMENSITY-${DEVICE^^}-${TYPE}-LTO-${DRONE_BUILD_NUMBER}-${DATE}"
+		VERSION="IMMENSITY-X-${DEVICE^^}-${TYPE}-LTO-${DRONE_BUILD_NUMBER}-${DATE}"
 	fi
 else
-	VERSION="IMMENSITY-${DEVICE^^}-${TYPE}-${DRONE_BUILD_NUMBER}-${DATE}"
+	VERSION="IMMENSITY-X-${DEVICE^^}-${TYPE}-${DRONE_BUILD_NUMBER}-${DATE}"
 fi
 
 # Export Zip name
@@ -95,6 +81,13 @@ if [[ -z "${KEBABS}" ]]; then
 	COUNT="$(grep -c '^processor' /proc/cpuinfo)"
 	export KEBABS="$((COUNT * 2))"
 fi
+
+ARGS="ARCH=arm64 \
+	O=${OUT_DIR} \
+	LLVM=1 \
+	CLANG_TRIPLE=aarch64-linux-gnu- \
+	CROSS_COMPILE="aarch64-linux-gnu-"
+	-j${KEBABS}"
 
 # Correct panel dimensions on MIUI builds
 function miui_fix_dimens()
@@ -220,14 +213,30 @@ if [[ "$@" =~ "gcc"* ]]; then
 	else
 		if [[ "$@" =~ "miui"* ]]; then
 			scripts/config --file ${OUT_DIR}/.config \
-				-d LOCALVERSION_AUTO \
-				-e MIHW \
-				-e MILLET \
-				-e MI_RECLAIM \
-				-e BINDER_OPT \
-				-e KPERFEVENTS \
-				-e PERF_HUMANTASK \
-				-e TASK_DELAY_ACCT
+		                --set-str STATIC_USERMODEHELPER_PATH /system/bin/micd \
+		                -d ARM_DSU_PMU \
+		                -d IOSCHED_BFQ \
+		                -d MEMORY_HOTPLUG \
+		                -e BINDER_OPT \
+		                -e BLK_WBT \
+		                -e BLK_WBT_MQ \
+		                -e BLK_WBT_SQ \
+		                -e DEBUG_FS \
+		                -e KPERFEVENTS \
+		                -e LAST_TOUCH_EVENTS \
+		                -e MIGT \
+		                -e MIHW \
+		                -e MILLET \
+		                -e MIUI_DRM_WAKE_OPT \
+		                -e MIUI_ZRAM_MEMORY_TRACKING \
+		                -e MI_MEMORY_SYSFS \
+		                -e MI_RECLAIM \
+		                -e NETFILTER_XT_MATCH_CONNBYTES \
+		                -e PERF_HUMANTASK \
+		                -e TASK_DELAY_ACCT \
+		                -e THERMAL_DIMMING \
+		                -e XM_POWER_DEBUG \
+		                -e ZRAM_WRITEBACK
 
 			# Make olddefconfig
 			cd ${OUT_DIR} || exit
@@ -253,10 +262,7 @@ else
 	PATH=${HOME}/clang/bin/:$PATH
 
 	# Make defconfig
-	make ARCH=arm64 \
-		O=${OUT_DIR} \
-		"${DEVICE}"_defconfig \
-		-j${KEBABS}
+	make -j${KEBABS} ${ARGS} "${DEVICE}"_defconfig
 
 	if [[ "$@" =~ "lto"* ]]; then
 		# Enable LTO
@@ -266,16 +272,12 @@ else
 			-d THINLTO \
 			-e SHADOW_CALL_STACK \
 			-e POLLY_CLANG \
-			-e TOOLS_SUPPORT_RELR \
-			-e LD_LLD
+			-e TOOLS_SUPPORT_RELR
 
 		# Make olddefconfig
 		cd ${OUT_DIR} || exit
-		make O=${OUT_DIR} \
-			ARCH=arm64 \
-			olddefconfig \
-			-j${KEBABS}
-			cd ../
+		make -j${KEBABS} ${ARGS} olddefconfig
+		cd ../ || exit
 
 	elif [[ "$@" =~ "lto"* ]] && [[ "$@" =~ "miui"* ]]; then
 		# Enable LTO
@@ -288,21 +290,35 @@ else
 			-e TOOLS_SUPPORT_RELR \
 			-e LD_LLD \
 			-d LOCALVERSION_AUTO \
-			-e MIHW \
-			-e MILLET \
-			-e MI_RECLAIM \
-			-e BINDER_OPT \
-			-e KPERFEVENTS \
-			-e PERF_HUMANTASK \
-			-e TASK_DELAY_ACCT \
+	                --set-str STATIC_USERMODEHELPER_PATH /system/bin/micd \
+	                -d ARM_DSU_PMU \
+	                -d IOSCHED_BFQ \
+	                -d MEMORY_HOTPLUG \
+	                -e BINDER_OPT \
+	                -e BLK_WBT \
+	                -e BLK_WBT_MQ \
+	                -e BLK_WBT_SQ \
+	                -e DEBUG_FS \
+	                -e KPERFEVENTS \
+	                -e LAST_TOUCH_EVENTS \
+	                -e MIGT \
+	                -e MIHW \
+	                -e MILLET \
+	                -e MIUI_DRM_WAKE_OPT \
+	                -e MIUI_ZRAM_MEMORY_TRACKING \
+	                -e MI_MEMORY_SYSFS \
+	                -e MI_RECLAIM \
+	                -e NETFILTER_XT_MATCH_CONNBYTES \
+	                -e PERF_HUMANTASK \
+	                -e TASK_DELAY_ACCT \
+	                -e THERMAL_DIMMING \
+	                -e XM_POWER_DEBUG \
+	                -e ZRAM_WRITEBACK
 
 		# Make olddefconfig
 		cd ${OUT_DIR} || exit
-		make O=${OUT_DIR} \
-			ARCH=arm64 \
-			olddefconfig \
-			-j${KEBABS}
-		cd ../
+		make -j${KEBABS} ${ARGS} olddefconfig
+		cd ../ || exit
 
 		miui_fix_dimens
 		miui_fix_fps
@@ -310,52 +326,48 @@ else
 		miui_fix_fod
 	fi
 
-	if [[ "$@" =~ "raphael"* ]]; then
-		make ARCH=arm64 \
-			O=${OUT_DIR} \
-			CC="clang" \
-			AR="llvm-ar" \
-			NM="llvm-nm" \
-			OBJCOPY="llvm-objcopy" \
-			OBJDUMP="llvm-objdump" \
-			STRIP="llvm-strip" \
-			LD="ld.lld" \
-			CLANG_TRIPLE="aarch64-linux-gnu-" \
-			CROSS_COMPILE="aarch64-linux-gnu-" \
-			CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
-			-j${KEBABS}
-	else
-		if [[ "$@" =~ "miui"* ]]; then
-			scripts/config --file ${OUT_DIR}/.config \
-				-d LOCALVERSION_AUTO \
-				-e MIHW \
-				-e MILLET \
-				-e MI_RECLAIM \
-				-e BINDER_OPT \
-				-e KPERFEVENTS \
-				-e PERF_HUMANTASK \
-				-e TASK_DELAY_ACCT
+	if [[ "$@" =~ "miui"* ]]; then
+		scripts/config --file ${OUT_DIR}/.config \
+			-d LOCALVERSION_AUTO \
+		        --set-str STATIC_USERMODEHELPER_PATH /system/bin/micd \
+		        -d ARM_DSU_PMU \
+		        -d IOSCHED_BFQ \
+		        -d MEMORY_HOTPLUG \
+		        -e BINDER_OPT \
+		        -e BLK_WBT \
+		        -e BLK_WBT_MQ \
+		        -e BLK_WBT_SQ \
+		        -e DEBUG_FS \
+		        -e KPERFEVENTS \
+		        -e LAST_TOUCH_EVENTS \
+		        -e MIGT \
+		        -e MIHW \
+		        -e MILLET \
+		        -e MIUI_DRM_WAKE_OPT \
+		        -e MIUI_ZRAM_MEMORY_TRACKING \
+		        -e MI_MEMORY_SYSFS \
+		        -e MI_RECLAIM \
+		        -e NETFILTER_XT_MATCH_CONNBYTES \
+		        -e PERF_HUMANTASK \
+		        -e TASK_DELAY_ACCT \
+		        -e THERMAL_DIMMING \
+		        -e XM_POWER_DEBUG \
+		        -e ZRAM_WRITEBACK
 
-			# Make olddefconfig
-			cd ${OUT_DIR} || exit
-			make O=${OUT_DIR} \
-				ARCH=arm64 \
-				olddefconfig
-			cd ../
+		# Make olddefconfig
+		cd ${OUT_DIR} || exit
+		make O=${OUT_DIR} \
+			ARCH=arm64 \
+			olddefconfig
+		cd ../ || exit
 
-			miui_fix_dimens
-			miui_fix_fps
-			miui_fix_dfps
-			miui_fix_fod
-		fi
-
-		make ARCH=arm64 \
-			O=${OUT_DIR} \
-			LLVM=1 \
-			CROSS_COMPILE="aarch64-linux-gnu-" \
-			CROSS_COMPILE_ARM32="arm-linux-gnueabi-" \
-			-j${KEBABS}
+		miui_fix_dimens
+		miui_fix_fps
+		miui_fix_dfps
+		miui_fix_fod
 	fi
+
+	make -j${KEBABS} ${ARGS}
 fi
 
 END=$(date +"%s")
@@ -364,9 +376,9 @@ DIFF=$((END - START))
 find ${OUT_DIR}/arch/arm64/boot/dts/vendor/qcom -name '*.dtb' -exec cat {} + > ${OUT_DIR}/arch/arm64/boot/dtb
 
 # Import Anykernel3 folder
-cp "$(pwd)"/${OUT_DIR}/arch/arm64/boot/Image.gz "$(pwd)"/anykernel/
-cp "$(pwd)"/${OUT_DIR}/arch/arm64/boot/dtb "$(pwd)"/anykernel/
-cp "$(pwd)"/${OUT_DIR}/arch/arm64/boot/dtbo.img "$(pwd)"/anykernel/
+cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/
+cp ${OUT_DIR}/arch/arm64/boot/dtb anykernel/
+cp ${OUT_DIR}/arch/arm64/boot/dtbo.img anykernel/
 
 cd anykernel || exit
 zip -r9 "${ZIPNAME}" ./* -x .git .gitignore ./*.zip

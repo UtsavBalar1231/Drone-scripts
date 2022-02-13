@@ -2,7 +2,7 @@
 # shellcheck disable=SC2199
 # shellcheck source=/dev/null
 #
-# Copyright (C) 2020-21 UtsavBalar1231 <utsavbalar1231@gmail.com>
+# Copyright (C) 2020-22 UtsavBalar1231 <utsavbalar1231@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,24 +19,11 @@
 cd /drone/src/ || exit
 
 # Anykernel3
-if [[ "$@" =~ "alioth"* ]]; then
-        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b alioth anykernel
-elif [[ "$@" =~ "apollo"* ]]; then
-        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b apollo anykernel
-elif [[ "$@" =~ "cmi"* ]]; then
-        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b cmi anykernel
-elif [[ "$@" =~ "lmi"* ]]; then
-        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b lmi anykernel
-elif [[ "$@" =~ "umi"* ]]; then
-        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b umi anykernel
-elif [[ "$@" =~ "raphael"* ]]; then
+if [[ "$@" =~ "raphael"* ]]; then
         git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b master anykernel
 else
-        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b alioth anykernel
+        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b kona anykernel
 fi
-
-## Remove .git
-rm -fr anykernel/.git
 
 # Clone compiler
 if [[ "$@" =~ "gcc"* ]]; then
