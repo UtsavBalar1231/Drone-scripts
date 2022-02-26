@@ -19,11 +19,7 @@
 cd /drone/src/ || exit
 
 # Anykernel3
-if [[ "$@" =~ "raphael"* ]]; then
-        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b master anykernel
-else
-        git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b kona anykernel
-fi
+git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b kona anykernel
 
 # Clone compiler
 if [[ "$@" =~ "gcc"* ]]; then

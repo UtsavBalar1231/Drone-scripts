@@ -18,8 +18,7 @@
 
 cd /drone/src/ || exit
 
-# test
-echo $HOME
+HOME="/drone/src"
 
 if [[ "$@" =~ "gcc"* ]]; then
 	KBUILD_COMPILER_STRING=$("${HOME}"/gcc64/bin/aarch64-elf-gcc --version | head -n 1)
@@ -44,11 +43,7 @@ COMMIT=$(git rev-parse --short HEAD)
 DATE=$(date +"%d.%m.%y")
 
 # Set Kernel link
-if [[ "$@" =~ "raphael"* ]]; then
-	KERNEL_LINK=https://github.com/UtsavBalar1231/kernel_xiaomi_raphael
-else
-	KERNEL_LINK=https://github.com/UtsavBalar1231/kernel_xiaomi_sm8250
-fi
+KERNEL_LINK=https://github.com/UtsavBalar1231/kernel_xiaomi_sm8250
 
 # Set Kernel Version
 KERNELVER=$(make kernelversion)
@@ -188,7 +183,7 @@ if [[ "$@" =~ "gcc"* ]]; then
 	make O=${OUT_DIR} \
 		ARCH=arm64 \
 		olddefconfig
-	cd ../
+	cd ../ || exit
 
 	if [[ "$@" =~ "lto"* ]]; then
 		# Enable GCC LTO
@@ -200,63 +195,48 @@ if [[ "$@" =~ "gcc"* ]]; then
 		make O=${OUT_DIR} \
 			ARCH=arm64 \
 			olddefconfig
-		cd ../
+		cd ../ || exit
 	fi
 
-	if [[ "$@" =~ "raphael"* ]]; then
-		make ARCH=arm64 \
-			O=${OUT_DIR} \
-			CROSS_COMPILE="aarch64-elf-" \
-			LD="aarch64-elf-ld.bfd"
-			CROSS_COMPILE_ARM32="arm-eabi-" \
-			-j${KEBABS}
-	else
-		if [[ "$@" =~ "miui"* ]]; then
-			scripts/config --file ${OUT_DIR}/.config \
-		                --set-str STATIC_USERMODEHELPER_PATH /system/bin/micd \
-		                -d ARM_DSU_PMU \
-		                -d IOSCHED_BFQ \
-		                -d MEMORY_HOTPLUG \
-		                -e BINDER_OPT \
-		                -e BLK_WBT \
-		                -e BLK_WBT_MQ \
-		                -e BLK_WBT_SQ \
-		                -e DEBUG_FS \
-		                -e KPERFEVENTS \
-		                -e LAST_TOUCH_EVENTS \
-		                -e MIGT \
-		                -e MIHW \
-		                -e MILLET \
-		                -e MIUI_DRM_WAKE_OPT \
-		                -e MIUI_ZRAM_MEMORY_TRACKING \
-		                -e MI_MEMORY_SYSFS \
-		                -e MI_RECLAIM \
-		                -e NETFILTER_XT_MATCH_CONNBYTES \
-		                -e PERF_HUMANTASK \
-		                -e TASK_DELAY_ACCT \
-		                -e THERMAL_DIMMING \
-		                -e XM_POWER_DEBUG \
-		                -e ZRAM_WRITEBACK
+	if [[ "$@" =~ "miui"* ]]; then
+		scripts/config --file ${OUT_DIR}/.config \
+	                --set-str STATIC_USERMODEHELPER_PATH /system/bin/micd \
+	                -e BINDER_OPT \
+	                -e DEBUG_FS \
+	                -e KPERFEVENTS \
+	                -e LAST_TOUCH_EVENTS \
+	                -e MIGT \
+	                -e MIHW \
+	                -e MILLET \
+	                -e MIUI_DRM_WAKE_OPT \
+	                -e MIUI_ZRAM_MEMORY_TRACKING \
+	                -e MI_MEMORY_SYSFS \
+	                -e MI_RECLAIM \
+	                -e NETFILTER_XT_MATCH_CONNBYTES \
+	                -e PERF_HUMANTASK \
+	                -e TASK_DELAY_ACCT \
+	                -e THERMAL_DIMMING \
+	                -e XM_POWER_DEBUG \
+	                -e ZRAM_WRITEBACK
 
-			# Make olddefconfig
-			cd ${OUT_DIR} || exit
-			make O=${OUT_DIR} \
-				ARCH=arm64 \
-				olddefconfig
-			cd ../
+		# Make olddefconfig
+		cd ${OUT_DIR} || exit
+		make O=${OUT_DIR} \
+			ARCH=arm64 \
+			olddefconfig
+		cd ../ || exit
 
-			miui_fix_dimens
-			miui_fix_fps
-			miui_fix_dfps
-			miui_fix_fod
-		fi
-
-		make ARCH=arm64 \
-			O=${OUT_DIR} \
-			CROSS_COMPILE="aarch64-elf-" \
-			CROSS_COMPILE_ARM32="arm-eabi-" \
-			-j${KEBABS}
+		miui_fix_dimens
+		miui_fix_fps
+		miui_fix_dfps
+		miui_fix_fod
 	fi
+
+	make ARCH=arm64 \
+		O=${OUT_DIR} \
+		CROSS_COMPILE="aarch64-elf-" \
+		CROSS_COMPILE_ARM32="arm-eabi-" \
+		-j${KEBABS}
 else
 	# Set compiler Path
 	PATH=${HOME}/clang/bin/:$PATH
@@ -291,13 +271,7 @@ else
 			-e LD_LLD \
 			-d LOCALVERSION_AUTO \
 	                --set-str STATIC_USERMODEHELPER_PATH /system/bin/micd \
-	                -d ARM_DSU_PMU \
-	                -d IOSCHED_BFQ \
-	                -d MEMORY_HOTPLUG \
 	                -e BINDER_OPT \
-	                -e BLK_WBT \
-	                -e BLK_WBT_MQ \
-	                -e BLK_WBT_SQ \
 	                -e DEBUG_FS \
 	                -e KPERFEVENTS \
 	                -e LAST_TOUCH_EVENTS \
@@ -308,11 +282,9 @@ else
 	                -e MIUI_ZRAM_MEMORY_TRACKING \
 	                -e MI_MEMORY_SYSFS \
 	                -e MI_RECLAIM \
-	                -e NETFILTER_XT_MATCH_CONNBYTES \
 	                -e PERF_HUMANTASK \
 	                -e TASK_DELAY_ACCT \
-	                -e THERMAL_DIMMING \
-	                -e XM_POWER_DEBUG \
+	                -e XM_POWER_DEBUG
 	                -e ZRAM_WRITEBACK
 
 		# Make olddefconfig
@@ -330,13 +302,7 @@ else
 		scripts/config --file ${OUT_DIR}/.config \
 			-d LOCALVERSION_AUTO \
 		        --set-str STATIC_USERMODEHELPER_PATH /system/bin/micd \
-		        -d ARM_DSU_PMU \
-		        -d IOSCHED_BFQ \
-		        -d MEMORY_HOTPLUG \
 		        -e BINDER_OPT \
-		        -e BLK_WBT \
-		        -e BLK_WBT_MQ \
-		        -e BLK_WBT_SQ \
 		        -e DEBUG_FS \
 		        -e KPERFEVENTS \
 		        -e LAST_TOUCH_EVENTS \
@@ -347,10 +313,8 @@ else
 		        -e MIUI_ZRAM_MEMORY_TRACKING \
 		        -e MI_MEMORY_SYSFS \
 		        -e MI_RECLAIM \
-		        -e NETFILTER_XT_MATCH_CONNBYTES \
 		        -e PERF_HUMANTASK \
 		        -e TASK_DELAY_ACCT \
-		        -e THERMAL_DIMMING \
 		        -e XM_POWER_DEBUG \
 		        -e ZRAM_WRITEBACK
 
@@ -376,7 +340,11 @@ DIFF=$((END - START))
 find ${OUT_DIR}/arch/arm64/boot/dts/vendor/qcom -name '*.dtb' -exec cat {} + > ${OUT_DIR}/arch/arm64/boot/dtb
 
 # Import Anykernel3 folder
-cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/
+if [[ -f ${OUT_DIR}/arch/arm64/boot/Image.gz ]]; then
+	cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/
+else
+	cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/
+fi
 cp ${OUT_DIR}/arch/arm64/boot/dtb anykernel/
 cp ${OUT_DIR}/arch/arm64/boot/dtbo.img anykernel/
 
@@ -390,7 +358,7 @@ else
 	curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Error in build!!" -d chat_id="${CI_CHANNEL_ID}"
 	exit 1;
 fi
-cd "$(pwd)" || exit
+cd $(pwd) || exit
 
 # Cleanup
 rm -fr anykernel/
