@@ -187,6 +187,7 @@ os=miui
 make -j${KEBABS} ${ARGS}
 find ${OUT_DIR}/arch/arm64/boot/dts/vendor/qcom -name '*.dtb' -exec cat {} + > ${OUT_DIR}/arch/arm64/boot/dtb
 
+mkdir -p anykernel/$os
 # Import Anykernel3 folder
 if [[ -f ${OUT_DIR}/arch/arm64/boot/Image.gz ]]; then
     cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/$os
@@ -232,6 +233,7 @@ make -j${KEBABS} ${ARGS}
 
 find ${OUT_DIR}/arch/arm64/boot/dts/vendor/qcom -name '*.dtb' -exec cat {} + > ${OUT_DIR}/arch/arm64/boot/dtb
 
+mkdir -p anykernel/$os
 # Import Anykernel3 folder
 if [[ -f ${OUT_DIR}/arch/arm64/boot/Image.gz ]]; then
     cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/$os
@@ -252,6 +254,7 @@ scripts/config --file ${OUT_DIR}/.config \
 
 find ${OUT_DIR}/arch/arm64/boot/dts/vendor/qcom -name '*.dtb' -exec cat {} + > ${OUT_DIR}/arch/arm64/boot/dtb
 
+mkdir -p anykernel/$os
 # Import Anykernel3 folder
 if [[ -f ${OUT_DIR}/arch/arm64/boot/Image.gz ]]; then
     cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/$os
