@@ -20,11 +20,8 @@ cd /drone/src/ || exit
 
 HOME="/drone/src"
 
-if [[ "$@" =~ "gcc"* ]]; then
-    KBUILD_COMPILER_STRING=$("${HOME}"/gcc64/bin/aarch64-elf-gcc --version | head -n 1)
-else
-    KBUILD_COMPILER_STRING=$("${HOME}"/clang/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
-fi
+KBUILD_COMPILER_STRING=$(${HOME}/clang/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
+KBUILD_LINKER_STRING=$(${HOME}/clang/bin/ld.lld --version  | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//' | sed 's/(compatible with [^)]*)//')
 
 #
 # Enviromental Variables
@@ -144,15 +141,13 @@ function miui_fix_fod()
 
 # Post to CI channel
 curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendPhoto -d photo=https://github.com/UtsavBalar1231/xda-stuff/raw/master/banner.png -d chat_id="${CI_CHANNEL_ID}"
-curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="<code>               IMMENSITY Automated build</code>
-<code>-----------------------------------------------------------</code>
+curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="<code>IMMENSITY Automated build</code>
 <b>• BuildType</b> : <code>${TYPE}</code>
 <b>• Device</b> : <code>${DEVICE}</code>
 <b>• Compiler</b> : <code>${COMPILER}</code>
 <b>• Branch</b> : <code>$(git rev-parse --abbrev-ref HEAD)</code>
 <b>• Kernelversion</b> : <code>${KERNELVER}</code>
 <b>• Commit</b> : ${MESSAGE}
-<code>-----------------------------------------------------------</code>
 
 <i>• Build started on Drone Cloud...</i>
 • <a href='https://cloud.drone.io/UtsavBalar1231/kernel_xiaomi_sm8250/${DRONE_BUILD_NUMBER}'>Check the build status here</a>" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
@@ -269,10 +264,15 @@ DIFF=$((END - START))
 
 cd anykernel || exit
 zip -r9 "${ZIPNAME}" ./* -x .git .gitignore ./*.zip
+
+RESPONSE=$(curl -# -F "name=${ZIPNAME}" -F "file=@${ZIPNAME}" -u :"${PD_API_KEY}" https://pixeldrain.com/api/file)
+FILEID=$(echo $RESPONSE | grep -Po '(?<="id":")[^"]*')
+
 CHECKER=$(find ./ -maxdepth 1 -type f -name ${ZIPNAME} -printf "%s\n")
 if (($((CHECKER / 1048576)) > 5)); then
     curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="✅Kernel compiled successfully in $((DIFF / 60)) minute(s) and $((DIFF % 60)) seconds for ${DEVICE}" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
-    curl -F chat_id="${CI_CHANNEL_ID}" -F document=@"$(pwd)/${ZIPNAME}" https://api.telegram.org/bot"${BOT_API_KEY}"/sendDocument
+    curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Kernel build link: https://pixeldrain.com/u/$FILEID" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
+#    curl -F chat_id="${CI_CHANNEL_ID}" -F document=@"$(pwd)/${ZIPNAME}" https://api.telegram.org/bot"${BOT_API_KEY}"/sendDocument
 else
     curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Error in build!!" -d chat_id="${CI_CHANNEL_ID}"
     exit 1;

@@ -22,9 +22,4 @@ cd /drone/src/ || exit
 git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b kona anykernel
 
 # Clone compiler
-if [[ "$@" =~ "gcc"* ]]; then
-	git clone --depth=1 https://github.com/mvaisakh/gcc-arm64 --depth=1 gcc64
-	git clone --depth=1 https://github.com/mvaisakh/gcc-arm --depth=1 gcc32
-else
-	git clone https://github.com/kdrag0n/proton-clang -b master --depth=1 clang
-fi
+git clone https://github.com/kdrag0n/proton-clang -b master --depth=1 clang
