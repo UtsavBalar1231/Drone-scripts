@@ -183,7 +183,7 @@ if [[ "$@" =~ "lto"* ]]; then
 fi
 
 # AOSP Build
-os=miui
+os=aosp
 make -j${KEBABS} ${ARGS}
 find ${OUT_DIR}/arch/arm64/boot/dts/vendor/qcom -name '*.dtb' -exec cat {} + > ${OUT_DIR}/arch/arm64/boot/dtb
 
