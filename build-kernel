@@ -182,15 +182,15 @@ os=aosp
 make -j${KEBABS} ${ARGS}
 find ${OUT_DIR}/arch/arm64/boot/dts/vendor/qcom -name '*.dtb' -exec cat {} + > ${OUT_DIR}/arch/arm64/boot/dtb
 
-mkdir -p anykernel/$os
+mkdir -p anykernel/kernels/$os
 # Import Anykernel3 folder
 if [[ -f ${OUT_DIR}/arch/arm64/boot/Image.gz ]]; then
-    cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/$os
+    cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/kernels/$os
 else
-    cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/$os
+    cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/kernels/$os
 fi
-cp ${OUT_DIR}/arch/arm64/boot/dtb anykernel/$os
-cp ${OUT_DIR}/arch/arm64/boot/dtbo.img anykernel/$os
+cp ${OUT_DIR}/arch/arm64/boot/dtb anykernel/kernels/$os
+cp ${OUT_DIR}/arch/arm64/boot/dtbo.img anykernel/kernels/$os
 
 # MIUI Build
 os=miui
@@ -228,15 +228,15 @@ make -j${KEBABS} ${ARGS}
 
 find ${OUT_DIR}/arch/arm64/boot/dts/vendor/qcom -name '*.dtb' -exec cat {} + > ${OUT_DIR}/arch/arm64/boot/dtb
 
-mkdir -p anykernel/$os
+mkdir -p anykernel/kernels/$os
 # Import Anykernel3 folder
 if [[ -f ${OUT_DIR}/arch/arm64/boot/Image.gz ]]; then
-    cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/$os
+    cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/kernels/$os
 else
-    cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/$os
+    cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/kernels/$os
 fi
-cp ${OUT_DIR}/arch/arm64/boot/dtb anykernel/$os
-cp ${OUT_DIR}/arch/arm64/boot/dtbo.img anykernel/$os
+cp ${OUT_DIR}/arch/arm64/boot/dtb anykernel/kernels/$os
+cp ${OUT_DIR}/arch/arm64/boot/dtbo.img anykernel/kernels/$os
 
 git checkout arch/arm64/boot/dts/vendor &> /dev/null
 
@@ -249,15 +249,15 @@ scripts/config --file ${OUT_DIR}/.config \
 
 find ${OUT_DIR}/arch/arm64/boot/dts/vendor/qcom -name '*.dtb' -exec cat {} + > ${OUT_DIR}/arch/arm64/boot/dtb
 
-mkdir -p anykernel/$os
+mkdir -p anykernel/kernels/$os
 # Import Anykernel3 folder
 if [[ -f ${OUT_DIR}/arch/arm64/boot/Image.gz ]]; then
-    cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/$os
+    cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/kernels/$os
 else
-    cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/$os
+    cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/kernels/$os
 fi
-cp ${OUT_DIR}/arch/arm64/boot/dtb anykernel/$os
-cp ${OUT_DIR}/arch/arm64/boot/dtbo.img anykernel/$os
+cp ${OUT_DIR}/arch/arm64/boot/dtb anykernel/kernels/$os
+cp ${OUT_DIR}/arch/arm64/boot/dtbo.img anykernel/kernels/$os
 
 END=$(date +"%s")
 DIFF=$((END - START))
