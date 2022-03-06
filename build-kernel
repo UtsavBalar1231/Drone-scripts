@@ -209,7 +209,6 @@ scripts/config --file ${OUT_DIR}/.config \
     -e MILLET \
     -e MIUI_DRM_WAKE_OPT \
     -e MIUI_ZRAM_MEMORY_TRACKING \
-    -e MI_MEMORY_SYSFS \
     -e MI_RECLAIM \
     -e PERF_HUMANTASK \
     -e TASK_DELAY_ACCT
