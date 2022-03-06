@@ -53,6 +53,13 @@ MESSAGE="$AUTHOR: $REF$KERNEL_LINK/commit/$COMMIT"
 # Set our directory
 OUT_DIR=out/
 
+# Set Compiler
+if [[ "$@" =~ "aosp-clang"* ]]; then
+	COMPILER="AOSP Clang 14.0.2"
+else
+	COMPILER="Proton Clang 13.0.0"
+fi
+
 # Get reference string
 REF=$(echo "$BRANCH" | grep -Eo "[^ /]+\$")
 
@@ -161,7 +168,12 @@ curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text
 START=$(date +"%s")
 
 # Set compiler Path
-PATH=${HOME}/clang/bin/:$PATH
+if [[ "$@" =~ "aosp-clang"* ]]; then
+	PATH=${HOME}/gas:${HOME}/clang/bin/:$PATH
+	export LD_LIBRARY_PATH=${HOME}/clang/lib64:$LD_LIBRARY_PATH
+else
+	PATH=${HOME}/clang/bin/:$PATH
+fi
 
 # Make defconfig
 make -j${KEBABS} ${ARGS} "${DEVICE}"_defconfig
