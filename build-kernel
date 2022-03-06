@@ -56,11 +56,13 @@ OUT_DIR=out/
 # Get reference string
 REF=$(echo "$BRANCH" | grep -Eo "[^ /]+\$")
 
+CSUM=$(cksum <<< ${COMMIT} | cut -f 1 -d ' ')
+
 # Select LTO or non LTO builds
 if [[ "$@" =~ "lto"* ]]; then
-    VERSION="IMMENSITY-X-${DEVICE^^}-${TYPE}-LTO-${DRONE_BUILD_NUMBER}-${DATE}"
+    VERSION="IMMENSITY-X-${DEVICE^^}-${TYPE}-LTO-${CSUM}-${DATE}"
 else
-    VERSION="IMMENSITY-X-${DEVICE^^}-${TYPE}-${DRONE_BUILD_NUMBER}-${DATE}"
+    VERSION="IMMENSITY-X-${DEVICE^^}-${TYPE}-${CSUM}-${DATE}"
 fi
 
 # Export Zip name
