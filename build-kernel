@@ -204,7 +204,12 @@ mkdir -p anykernel/kernels/$os
 if [[ -f ${OUT_DIR}/arch/arm64/boot/Image.gz ]]; then
     cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/kernels/$os
 else
-    cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/kernels/$os
+  if [[ -f ${OUT_DIR}/arch/arm64/boot/Image ]]; then
+      cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/kernels/$os
+  else
+      curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Error in build!!" -d chat_id="${CI_CHANNEL_ID}"
+      exit 1;
+  fi
 fi
 cp ${OUT_DIR}/arch/arm64/boot/dtb anykernel/kernels/$os
 cp ${OUT_DIR}/arch/arm64/boot/dtbo.img anykernel/kernels/$os
