@@ -223,6 +223,7 @@ scripts/config --file ${OUT_DIR}/.config \
     --set-str STATIC_USERMODEHELPER_PATH /system/bin/micd \
     -e BOOT_INFO \
     -e BINDER_OPT \
+    -e DEBUG_KERNEL \
     -e KPERFEVENTS \
     -e LAST_TOUCH_EVENTS \
     -e MIGT \
