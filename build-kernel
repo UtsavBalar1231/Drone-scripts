@@ -55,7 +55,7 @@ OUT_DIR=out/
 
 # Set Compiler
 if [[ "$@" =~ "aosp-clang"* ]]; then
-	COMPILER="AOSP Clang 14.0.2"
+	COMPILER="AOSP Clang 14.0.4"
 else
 	COMPILER="Proton Clang 13.0.0"
 fi
@@ -155,15 +155,15 @@ function miui_fix_fod()
 # Post to CI channel
 curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendPhoto -d photo=https://github.com/UtsavBalar1231/xda-stuff/raw/master/banner.png -d chat_id="${CI_CHANNEL_ID}"
 curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="<code>IMMENSITY Automated build</code>
-<b>• BuildType</b> : <code>${TYPE}</code>
-<b>• Device</b> : <code>${DEVICE}</code>
-<b>• Compiler</b> : <code>${COMPILER}</code>
-<b>• Branch</b> : <code>$(git rev-parse --abbrev-ref HEAD)</code>
-<b>• Kernelversion</b> : <code>${KERNELVER}</code>
-<b>• Commit</b> : ${MESSAGE}
+<b>BUILD TYPE</b> : <code>${TYPE}</code>
+<b>DEVICE</b> : <code>${DEVICE}</code>
+<b>COMPILER</b> : <code>${COMPILER}</code>
+<b>BRANCH</b> : <code>$(git rev-parse --abbrev-ref HEAD)</code>
+<b>KERNEL VERSION</b> : <code>${KERNELVER}</code>
+<b>COMMIT</b> : ${MESSAGE}
 
-<i>• Build started on Drone Cloud...</i>
-• <a href='https://cloud.drone.io/UtsavBalar1231/kernel_xiaomi_sm8250/${DRONE_BUILD_NUMBER}'>Check the build status here</a>" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
+<i>Build started on Drone Cloud!</i>
+<a href='https://cloud.drone.io/UtsavBalar1231/kernel_xiaomi_sm8250/${DRONE_BUILD_NUMBER}'>Check the build status here</a>" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
 curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Build started for revision ${DRONE_BUILD_NUMBER}" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
 
 START=$(date +"%s")
@@ -197,7 +197,7 @@ fi
 
 # AOSP Build
 os=aosp
-make -j${KEBABS} ${ARGS}
+make -j${KEBABS} ${ARGS} 2>&1 | tee build.log
 find ${OUT_DIR}/$dts_source -name '*.dtb' -exec cat {} + > ${OUT_DIR}/arch/arm64/boot/dtb
 
 mkdir -p anykernel/kernels/$os
@@ -238,8 +238,8 @@ scripts/config --file ${OUT_DIR}/.config \
 # Make olddefconfig
 cd ${OUT_DIR} || exit
 make O=${OUT_DIR} \
-ARCH=arm64 \
-olddefconfig
+    ARCH=arm64 \
+    olddefconfig
 cd ../ || exit
 
 miui_fix_dimens
@@ -247,7 +247,7 @@ miui_fix_fps
 miui_fix_dfps
 miui_fix_fod
 
-make -j${KEBABS} ${ARGS}
+make -j${KEBABS} ${ARGS} 2>&1 | tee build.log
 
 find ${OUT_DIR}/$dts_source -name '*.dtb' -exec cat {} + > ${OUT_DIR}/arch/arm64/boot/dtb
 
@@ -263,12 +263,20 @@ cp ${OUT_DIR}/arch/arm64/boot/dtbo.img anykernel/kernels/$os
 
 git checkout arch/arm64/boot/dts/vendor &> /dev/null
 
-
 # AOSPA Build
 os=aospa
 scripts/config --file ${OUT_DIR}/.config \
     -d SDCARD_FS \
     -e UNICODE
+
+# Make olddefconfig
+cd ${OUT_DIR} || exit
+make O=${OUT_DIR} \
+    ARCH=arm64 \
+    olddefconfig
+cd ../ || exit
+
+make -j${KEBABS} ${ARGS} 2>&1 | tee build.log
 
 find ${OUT_DIR}/$dts_source -name '*.dtb' -exec cat {} + > ${OUT_DIR}/arch/arm64/boot/dtb
 
@@ -298,6 +306,7 @@ if (($((CHECKER / 1048576)) > 5)); then
     #    curl -F chat_id="${CI_CHANNEL_ID}" -F document=@"$(pwd)/${ZIPNAME}" https://api.telegram.org/bot"${BOT_API_KEY}"/sendDocument
 else
     curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Error in build!!" -d chat_id="${CI_CHANNEL_ID}"
+    curl -F chat_id="${CI_CHANNEL_ID}" -F document=@"$(pwd)/build.log" https://api.telegram.org/bot"${BOT_API_KEY}"/sendDocument
     exit 1;
 fi
 cd $(pwd) || exit
