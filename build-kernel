@@ -20,11 +20,6 @@ cd /drone/src/ || exit
 
 HOME="/drone/src"
 
-KBUILD_COMPILER_STRING=$(${HOME}/clang/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
-KBUILD_LINKER_STRING=$(${HOME}/clang/bin/ld.lld --version  | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//' | sed 's/(compatible with [^)]*)//')
-export KBUILD_COMPILER_STRING
-export KBUILD_LINKER_STRING
-
 #
 # Enviromental Variables
 #
@@ -38,11 +33,8 @@ BRANCH=$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)
 # Set the last commit sha
 COMMIT=$(git rev-parse --short HEAD)
 
-# Set current date
-DATE=$(date +"%d.%m.%y")
-
 # Set Kernel link
-KERNEL_LINK=https://github.com/UtsavBalar1231/kernel_xiaomi_sm8250
+KERNEL_LINK=https://github.com/UtsavBalar1231/kernel_rockchip_linux
 
 # Set Kernel Version
 KERNELVER=$(make kernelversion)
@@ -54,26 +46,10 @@ MESSAGE="$AUTHOR: $REF$KERNEL_LINK/commit/$COMMIT"
 OUT_DIR=out/
 
 # Set Compiler
-if [[ "$@" =~ "aosp-clang"* ]]; then
-	COMPILER="AOSP Clang 14.0.4"
-else
-	COMPILER="Proton Clang 13.0.0"
-fi
+COMPILER="GCC 9.4.0"
 
 # Get reference string
 REF=$(echo "$BRANCH" | grep -Eo "[^ /]+\$")
-
-CSUM=$(cksum <<< ${COMMIT} | cut -f 1 -d ' ')
-
-# Select LTO or non LTO builds
-if [[ "$@" =~ "lto"* ]]; then
-    VERSION="IMMENSITY-X-${DEVICE^^}-${TYPE}-LTO-${CSUM}-${DATE}"
-else
-    VERSION="IMMENSITY-X-${DEVICE^^}-${TYPE}-${CSUM}-${DATE}"
-fi
-
-# Export Zip name
-export ZIPNAME="${VERSION}.zip"
 
 # How much kebabs we need? Kanged from @raphielscape :)
 if [[ -z "${KEBABS}" ]]; then
@@ -81,235 +57,52 @@ if [[ -z "${KEBABS}" ]]; then
     export KEBABS="$((COUNT * 2))"
 fi
 
+tg_post_message() {
+    # Post to CI channel
+    curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="<code>Automated kernel build</code>
+    <b>BUILD TYPE</b> : <code>${TYPE}</code>
+    <b>DEVICE</b> : <code>${DEVICE}</code>
+    <b>COMPILER</b> : <code>${COMPILER}</code>
+    <b>BRANCH</b> : <code>$(git rev-parse --abbrev-ref HEAD)</code>
+    <b>KERNEL VERSION</b> : <code>${KERNELVER}</code>
+    <b>COMMIT</b> : ${MESSAGE}
+
+    <i>Build started on Drone Cloud!</i>
+    <a href='https://cloud.drone.io/UtsavBalar1231/kernel_rockchip_linux/${DRONE_BUILD_NUMBER}'>Check the build status here</a>" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
+    curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Build started for revision ${DRONE_BUILD_NUMBER}" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
+}
+
+tg_upload() {
+    # Post to CI channel
+    curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="✅Kernel compiled successfully in $((DIFF / 60)) minute(s) and $((DIFF % 60)) seconds for ${DEVICE}" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
+    curl -F chat_id="${CI_CHANNEL_ID}" -F document=@"$(pwd)/${OUT_DIR}/uploads/Image" https://api.telegram.org/bot"${BOT_API_KEY}"/sendDocument
+    curl -F chat_id="${CI_CHANNEL_ID}" -F document=@"$(pwd)/${OUT_DIR}/uploads/dtb" https://api.telegram.org/bot"${BOT_API_KEY}"/sendDocument
+}
+
 ARGS="ARCH=arm64 \
 O=${OUT_DIR} \
-LLVM=1 \
-CLANG_TRIPLE=aarch64-linux-gnu- \
 CROSS_COMPILE=aarch64-linux-gnu- \
-CROSS_COMPILE_COMPAT=arm-linux-gnueabi- \
 -j${KEBABS}"
-
-dts_source=arch/arm64/boot/dts/vendor/qcom
-# Correct panel dimensions on MIUI builds
-function miui_fix_dimens()
-{
-    sed -i 's/<70>/<695>/g' $dts_source/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
-    sed -i 's/<70>/<695>/g' $dts_source/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
-    sed -i 's/<70>/<695>/g' $dts_source/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
-    sed -i 's/<71>/<710>/g' $dts_source/dsi-panel-j1s*
-    sed -i 's/<71>/<710>/g' $dts_source/dsi-panel-j2*
-    sed -i 's/<155>/<1544>/g' $dts_source/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
-    sed -i 's/<155>/<1545>/g' $dts_source/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
-    sed -i 's/<155>/<1546>/g' $dts_source/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
-    sed -i 's/<154>/<1537>/g' $dts_source/dsi-panel-j1s*
-    sed -i 's/<154>/<1537>/g' $dts_source/dsi-panel-j2*
-}
-
-# Enable back mi smartfps while disabling qsync min refresh-rate
-function miui_fix_fps()
-{
-    sed -i 's/qcom,mdss-dsi-qsync-min-refresh-rate/\/\/qcom,mdss-dsi-qsync-min-refresh-rate/g'  $dts_source/dsi-panel*
-    sed -i 's/\/\/ mi,mdss-dsi-smart-fps-max_framerate/mi,mdss-dsi-smart-fps-max_framerate/g' $dts_source/dsi-panel*
-    sed -i 's/\/\/ mi,mdss-dsi-pan-enable-smart-fps/mi,mdss-dsi-pan-enable-smart-fps/g' $dts_source/dsi-panel*
-    sed -i 's/\/\/ qcom,mdss-dsi-pan-enable-smart-fps/qcom,mdss-dsi-pan-enable-smart-fps/g' $dts_source/dsi-panel*
-}
-
-# Enable back refresh rates supported on MIUI
-function miui_fix_dfps()
-{
-    sed -i 's/120 90 60/120 90 60 50 30/g' $dts_source/dsi-panel-g7a-37-02-0a-dsc-video.dtsi
-    sed -i 's/120 90 60/120 90 60 50 30/g' $dts_source/dsi-panel-g7a-37-02-0b-dsc-video.dtsi
-    sed -i 's/120 90 60/120 90 60 50 30/g' $dts_source/dsi-panel-g7a-36-02-0c-dsc-video.dtsi
-    sed -i 's/144 120 90 60/144 120 90 60 50 48 30/g' $dts_source/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
-}
-
-# Enable back brightness control from dtsi
-function miui_fix_fod()
-{
-    sed -i 's/\/\/39 01 00 00 01 00 03 51 03 FF/39 01 00 00 01 00 03 51 03 FF/g' $dts_source/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
-    sed -i 's/\/\/39 01 00 00 00 00 03 51 03 FF/39 01 00 00 00 00 03 51 03 FF/g' $dts_source/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
-    sed -i 's/\/\/39 00 00 00 00 00 05 51 0F 8F 00 00/39 00 00 00 00 00 05 51 0F 8F 00 00/g' $dts_source/dsi-panel-j1s-42-02-0a-dsc-cmd.dtsi
-    sed -i 's/\/\/39 01 00 00 00 00 05 51 07 FF 00 00/39 01 00 00 00 00 05 51 07 FF 00 00/g' $dts_source/dsi-panel-j1s-42-02-0a-dsc-cmd.dtsi
-    sed -i 's/\/\/39 00 00 00 00 00 05 51 0F 8F 00 00/39 00 00 00 00 00 05 51 0F 8F 00 00/g' $dts_source/dsi-panel-j1s-42-02-0a-mp-dsc-cmd.dtsi
-    sed -i 's/\/\/39 01 00 00 00 00 05 51 07 FF 00 00/39 01 00 00 00 00 05 51 07 FF 00 00/g' $dts_source/dsi-panel-j1s-42-02-0a-mp-dsc-cmd.dtsi
-    sed -i 's/\/\/39 01 00 00 00 00 03 51 0F FF/39 01 00 00 00 00 03 51 0F FF/g' $dts_source/dsi-panel-j1u-42-02-0b-dsc-cmd.dtsi
-    sed -i 's/\/\/39 01 00 00 00 00 03 51 07 FF/39 01 00 00 00 00 03 51 07 FF/g' $dts_source/dsi-panel-j1u-42-02-0b-dsc-cmd.dtsi
-    sed -i 's/\/\/39 01 00 00 00 00 03 51 00 00/39 01 00 00 00 00 03 51 00 00/g' $dts_source/dsi-panel-j2-38-0c-0a-dsc-cmd.dtsi
-    sed -i 's/\/\/39 01 00 00 00 00 03 51 00 00/39 01 00 00 00 00 03 51 00 00/g' $dts_source/dsi-panel-j2-38-0c-0a-dsc-cmd.dtsi
-    sed -i 's/\/\/39 01 00 00 00 00 03 51 0F FF/39 01 00 00 00 00 03 51 0F FF/g' $dts_source/dsi-panel-j2-42-02-0b-dsc-cmd.dtsi
-    sed -i 's/\/\/39 01 00 00 00 00 03 51 07 FF/39 01 00 00 00 00 03 51 07 FF/g' $dts_source/dsi-panel-j2-42-02-0b-dsc-cmd.dtsi
-    sed -i 's/\/\/39 00 00 00 00 00 05 51 0F 8F 00 00/39 00 00 00 00 00 05 51 0F 8F 00 00/g' $dts_source/dsi-panel-j2-mp-42-02-0b-dsc-cmd.dtsi
-    sed -i 's/\/\/39 01 00 00 00 00 05 51 07 FF 00 00/39 01 00 00 00 00 05 51 07 FF 00 00/g' $dts_source/dsi-panel-j2-mp-42-02-0b-dsc-cmd.dtsi
-    sed -i 's/\/\/39 01 00 00 00 00 03 51 0F FF/39 01 00 00 00 00 03 51 0F FF/g' $dts_source/dsi-panel-j2-p1-42-02-0b-dsc-cmd.dtsi
-    sed -i 's/\/\/39 01 00 00 00 00 03 51 07 FF/39 01 00 00 00 00 03 51 07 FF/g' $dts_source/dsi-panel-j2-p1-42-02-0b-dsc-cmd.dtsi
-    sed -i 's/\/\/39 00 00 00 00 00 03 51 0D FF/39 00 00 00 00 00 03 51 0D FF/g' $dts_source/dsi-panel-j2-p2-1-38-0c-0a-dsc-cmd.dtsi
-    sed -i 's/\/\/39 01 00 00 11 00 03 51 03 FF/39 01 00 00 11 00 03 51 03 FF/g' $dts_source/dsi-panel-j2-p2-1-38-0c-0a-dsc-cmd.dtsi
-    sed -i 's/\/\/39 00 00 00 00 00 05 51 0F 8F 00 00/39 00 00 00 00 00 05 51 0F 8F 00 00/g' $dts_source/dsi-panel-j2-p2-1-42-02-0b-dsc-cmd.dtsi
-    sed -i 's/\/\/39 01 00 00 00 00 05 51 07 FF 00 00/39 01 00 00 00 00 05 51 07 FF 00 00/g' $dts_source/dsi-panel-j2-p2-1-42-02-0b-dsc-cmd.dtsi
-    sed -i 's/\/\/39 00 00 00 00 00 05 51 0F 8F 00 00/39 00 00 00 00 00 05 51 0F 8F 00 00/g' $dts_source/dsi-panel-j2s-mp-42-02-0a-dsc-cmd.dtsi
-    sed -i 's/\/\/39 01 00 00 00 00 05 51 07 FF 00 00/39 01 00 00 00 00 05 51 07 FF 00 00/g' $dts_source/dsi-panel-j2s-mp-42-02-0a-dsc-cmd.dtsi
-    sed -i 's/\/\/39 00 00 00 00 00 03 51 03 FF/39 00 00 00 00 00 03 51 03 FF/g' $dts_source/dsi-panel-j9-38-0a-0a-fhd-video.dtsi
-    sed -i 's/\/\/39 01 00 00 00 00 03 51 03 FF/39 01 00 00 00 00 03 51 03 FF/g' $dts_source/dsi-panel-j9-38-0a-0a-fhd-video.dtsi
-}
-
-# Post to CI channel
-curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendPhoto -d photo=https://github.com/UtsavBalar1231/xda-stuff/raw/master/banner.png -d chat_id="${CI_CHANNEL_ID}"
-curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="<code>IMMENSITY Automated build</code>
-<b>BUILD TYPE</b> : <code>${TYPE}</code>
-<b>DEVICE</b> : <code>${DEVICE}</code>
-<b>COMPILER</b> : <code>${COMPILER}</code>
-<b>BRANCH</b> : <code>$(git rev-parse --abbrev-ref HEAD)</code>
-<b>KERNEL VERSION</b> : <code>${KERNELVER}</code>
-<b>COMMIT</b> : ${MESSAGE}
-
-<i>Build started on Drone Cloud!</i>
-<a href='https://cloud.drone.io/UtsavBalar1231/kernel_xiaomi_sm8250/${DRONE_BUILD_NUMBER}'>Check the build status here</a>" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
-curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Build started for revision ${DRONE_BUILD_NUMBER}" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
 
 START=$(date +"%s")
 
-# Set compiler Path
-if [[ "$@" =~ "aosp-clang"* ]]; then
-	PATH=${HOME}/gas:${HOME}/clang/bin/:$PATH
-	export LD_LIBRARY_PATH=${HOME}/clang/lib64:$LD_LIBRARY_PATH
-else
-	PATH=${HOME}/clang/bin/:$PATH
-fi
+tg_post_message
 
 # Make defconfig
 make -j${KEBABS} ${ARGS} "${DEVICE}"_defconfig
 
-if [[ "$@" =~ "lto"* ]]; then
-    # Enable LTO
-    scripts/config --file ${OUT_DIR}/.config \
-        -e LTO \
-        -e LTO_CLANG \
-        -d THINLTO \
-        -e SHADOW_CALL_STACK \
-        -e POLLY_CLANG \
-        -e TOOLS_SUPPORT_RELR
-    
-    # Make olddefconfig
-    cd ${OUT_DIR} || exit
-    make -j${KEBABS} ${ARGS} olddefconfig
-    cd ../ || exit
-fi
-
-# AOSP Build
-os=aosp
 make -j${KEBABS} ${ARGS} 2>&1 | tee build.log
-find ${OUT_DIR}/$dts_source -name '*.dtb' -exec cat {} + > ${OUT_DIR}/arch/arm64/boot/dtb
+find ${OUT_DIR}/arch/arm64/boot/dts/rockchip -name '*.dtb' -exec cat {} + > ${OUT_DIR}/arch/arm64/boot/rk3399.dtb
 
-mkdir -p anykernel/kernels/$os
-# Import Anykernel3 folder
-if [[ -f ${OUT_DIR}/arch/arm64/boot/Image.gz ]]; then
-    cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/kernels/$os
+mkdir -p ${OUT_DIR}/uploads
+if [[ -f ${OUT_DIR}/arch/arm64/boot/Image ]]; then
+    cp ${OUT_DIR}/arch/arm64/boot/Image ${OUT_DIR}/uploads
+    cp ${OUT_DIR}/arch/arm64/boot/dtb ${OUT_DIR}/uploads
+    tg_upload
 else
-  if [[ -f ${OUT_DIR}/arch/arm64/boot/Image ]]; then
-      cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/kernels/$os
-  else
-      curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Error in build!!" -d chat_id="${CI_CHANNEL_ID}"
-      exit 1;
-  fi
+    curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Error in build!!" -d chat_id="${CI_CHANNEL_ID}"
+    exit 1;
 fi
-cp ${OUT_DIR}/arch/arm64/boot/dtb anykernel/kernels/$os
-cp ${OUT_DIR}/arch/arm64/boot/dtbo.img anykernel/kernels/$os
-
-# MIUI Build
-os=miui
-scripts/config --file ${OUT_DIR}/.config \
-    -d LOCALVERSION_AUTO \
-    -d TOUCHSCREEN_COMMON \
-    --set-str STATIC_USERMODEHELPER_PATH /system/bin/micd \
-    -e BOOT_INFO \
-    -e BINDER_OPT \
-    -e DEBUG_KERNEL \
-    -e KPERFEVENTS \
-    -e LAST_TOUCH_EVENTS \
-    -e MIGT \
-    -e MIHW \
-    -e MILLET \
-    -e MIUI_DRM_WAKE_OPT \
-    -e MIUI_ZRAM_MEMORY_TRACKING \
-    -e MI_RECLAIM \
-    -e PERF_HUMANTASK \
-    -e TASK_DELAY_ACCT
-
-# Make olddefconfig
-cd ${OUT_DIR} || exit
-make O=${OUT_DIR} \
-    ARCH=arm64 \
-    olddefconfig
-cd ../ || exit
-
-miui_fix_dimens
-miui_fix_fps
-miui_fix_dfps
-miui_fix_fod
-
-make -j${KEBABS} ${ARGS} 2>&1 | tee build.log
-
-find ${OUT_DIR}/$dts_source -name '*.dtb' -exec cat {} + > ${OUT_DIR}/arch/arm64/boot/dtb
-
-mkdir -p anykernel/kernels/$os
-# Import Anykernel3 folder
-if [[ -f ${OUT_DIR}/arch/arm64/boot/Image.gz ]]; then
-    cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/kernels/$os
-else
-    cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/kernels/$os
-fi
-cp ${OUT_DIR}/arch/arm64/boot/dtb anykernel/kernels/$os
-cp ${OUT_DIR}/arch/arm64/boot/dtbo.img anykernel/kernels/$os
-
-git checkout arch/arm64/boot/dts/vendor &> /dev/null
-
-# AOSPA Build
-os=aospa
-scripts/config --file ${OUT_DIR}/.config \
-    -d SDCARD_FS \
-    -e UNICODE
-
-# Make olddefconfig
-cd ${OUT_DIR} || exit
-make O=${OUT_DIR} \
-    ARCH=arm64 \
-    olddefconfig
-cd ../ || exit
-
-make -j${KEBABS} ${ARGS} 2>&1 | tee build.log
-
-find ${OUT_DIR}/$dts_source -name '*.dtb' -exec cat {} + > ${OUT_DIR}/arch/arm64/boot/dtb
-
-mkdir -p anykernel/kernels/$os
-# Import Anykernel3 folder
-if [[ -f ${OUT_DIR}/arch/arm64/boot/Image.gz ]]; then
-    cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/kernels/$os
-else
-    cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/kernels/$os
-fi
-cp ${OUT_DIR}/arch/arm64/boot/dtb anykernel/kernels/$os
-cp ${OUT_DIR}/arch/arm64/boot/dtbo.img anykernel/kernels/$os
 
 END=$(date +"%s")
 DIFF=$((END - START))
-
-cd anykernel || exit
-zip -r9 "${ZIPNAME}" ./* -x .git .gitignore ./*.zip
-
-RESPONSE=$(curl -# -F "name=${ZIPNAME}" -F "file=@${ZIPNAME}" -u :"${PD_API_KEY}" https://pixeldrain.com/api/file)
-FILEID=$(echo $RESPONSE | grep -Po '(?<="id":")[^"]*')
-
-CHECKER=$(find ./ -maxdepth 1 -type f -name ${ZIPNAME} -printf "%s\n")
-if (($((CHECKER / 1048576)) > 5)); then
-    curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="✅Kernel compiled successfully in $((DIFF / 60)) minute(s) and $((DIFF % 60)) seconds for ${DEVICE}" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
-    curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Kernel build link: https://pixeldrain.com/u/$FILEID" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
-    #    curl -F chat_id="${CI_CHANNEL_ID}" -F document=@"$(pwd)/${ZIPNAME}" https://api.telegram.org/bot"${BOT_API_KEY}"/sendDocument
-else
-    curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Error in build!!" -d chat_id="${CI_CHANNEL_ID}"
-    curl -F chat_id="${CI_CHANNEL_ID}" -F document=@"$(pwd)/build.log" https://api.telegram.org/bot"${BOT_API_KEY}"/sendDocument
-    exit 1;
-fi
-cd $(pwd) || exit
-
-# Cleanup
-rm -fr anykernel/
