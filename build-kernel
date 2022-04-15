@@ -153,8 +153,10 @@ function miui_fix_fod()
 }
 
 # Post to CI channel
-curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendPhoto -d photo=https://github.com/UtsavBalar1231/xda-stuff/raw/master/banner.png -d chat_id="${CI_CHANNEL_ID}"
-curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="<code>IMMENSITY Automated build</code>
+function tg_post_msg()
+{
+    curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendPhoto -d photo=https://github.com/UtsavBalar1231/xda-stuff/raw/master/banner.png -d chat_id="${CI_CHANNEL_ID}"
+    curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="<code>IMMENSITY Automated build</code>
 <b>BUILD TYPE</b> : <code>${TYPE}</code>
 <b>DEVICE</b> : <code>${DEVICE}</code>
 <b>COMPILER</b> : <code>${COMPILER}</code>
@@ -162,11 +164,20 @@ curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text
 <b>KERNEL VERSION</b> : <code>${KERNELVER}</code>
 <b>COMMIT</b> : ${MESSAGE}
 
-<i>Build started on Drone Cloud!</i>
-<a href='https://cloud.drone.io/UtsavBalar1231/kernel_xiaomi_sm8250/${DRONE_BUILD_NUMBER}'>Check the build status here</a>" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
-curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Build started for revision ${DRONE_BUILD_NUMBER}" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
+<i>Build started on Drone Cloud!</i><a href='https://cloud.drone.io/UtsavBalar1231/kernel_xiaomi_sm8250/${DRONE_BUILD_NUMBER}'>Check the build status here</a>" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
+    curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Build started for revision ${DRONE_BUILD_NUMBER}" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
+}
+
+function tg_post_error()
+{
+    curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Error in build!!" -d chat_id="${CI_CHANNEL_ID}"
+    curl -F chat_id="${CI_CHANNEL_ID}" -F document=@"$(pwd)/build.log" https://api.telegram.org/bot"${BOT_API_KEY}"/sendDocument
+    exit 1;
+}
 
 START=$(date +"%s")
+
+tg_post_msg
 
 # Set compiler Path
 if [[ "$@" =~ "aosp-clang"* ]]; then
@@ -176,24 +187,15 @@ else
 	PATH=${HOME}/clang/bin/:$PATH
 fi
 
+# Enable LTO
+if [[ "$@" =~ "lto"* ]]; then
+    echo "CONFIG_LTO_CLANG=y" >> arch/arm64/configs/"${DEVICE}"_defconfig
+    echo "CONFIG_THINLTO=n" >> arch/arm64/configs/"${DEVICE}"_defconfig
+    echo "CONFIG_TOOLS_SUPPORT_RELR=y" >> arch/arm64/configs/"${DEVICE}"_defconfig
+fi
+
 # Make defconfig
 make -j${KEBABS} ${ARGS} "${DEVICE}"_defconfig
-
-if [[ "$@" =~ "lto"* ]]; then
-    # Enable LTO
-    scripts/config --file ${OUT_DIR}/.config \
-        -e LTO \
-        -e LTO_CLANG \
-        -d THINLTO \
-        -e SHADOW_CALL_STACK \
-        -e POLLY_CLANG \
-        -e TOOLS_SUPPORT_RELR
-    
-    # Make olddefconfig
-    cd ${OUT_DIR} || exit
-    make -j${KEBABS} ${ARGS} olddefconfig
-    cd ../ || exit
-fi
 
 # AOSP Build
 os=aosp
@@ -208,8 +210,7 @@ else
   if [[ -f ${OUT_DIR}/arch/arm64/boot/Image ]]; then
       cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/kernels/$os
   else
-      curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Error in build!!" -d chat_id="${CI_CHANNEL_ID}"
-      exit 1;
+      tg_post_error
   fi
 fi
 cp ${OUT_DIR}/arch/arm64/boot/dtb anykernel/kernels/$os
@@ -237,9 +238,7 @@ scripts/config --file ${OUT_DIR}/.config \
 
 # Make olddefconfig
 cd ${OUT_DIR} || exit
-make O=${OUT_DIR} \
-    ARCH=arm64 \
-    olddefconfig
+make -j${KEBABS} ${ARGS} olddefconfig
 cd ../ || exit
 
 miui_fix_dimens
@@ -265,15 +264,17 @@ git checkout arch/arm64/boot/dts/vendor &> /dev/null
 
 # AOSPA Build
 os=aospa
+
+# Make defconfig
+make -j${KEBABS} ${ARGS} "${DEVICE}"_defconfig
+
 scripts/config --file ${OUT_DIR}/.config \
     -d SDCARD_FS \
     -e UNICODE
 
 # Make olddefconfig
 cd ${OUT_DIR} || exit
-make O=${OUT_DIR} \
-    ARCH=arm64 \
-    olddefconfig
+make -j${KEBABS} ${ARGS} olddefconfig
 cd ../ || exit
 
 make -j${KEBABS} ${ARGS} 2>&1 | tee build.log
@@ -305,9 +306,7 @@ if (($((CHECKER / 1048576)) > 5)); then
     curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Kernel build link: https://pixeldrain.com/u/$FILEID" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
     #    curl -F chat_id="${CI_CHANNEL_ID}" -F document=@"$(pwd)/${ZIPNAME}" https://api.telegram.org/bot"${BOT_API_KEY}"/sendDocument
 else
-    curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Error in build!!" -d chat_id="${CI_CHANNEL_ID}"
-    curl -F chat_id="${CI_CHANNEL_ID}" -F document=@"$(pwd)/build.log" https://api.telegram.org/bot"${BOT_API_KEY}"/sendDocument
-    exit 1;
+    tg_post_error
 fi
 cd $(pwd) || exit
 
