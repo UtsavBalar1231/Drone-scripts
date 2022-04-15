@@ -225,6 +225,7 @@ scripts/config --file ${OUT_DIR}/.config \
     -e BOOT_INFO \
     -e BINDER_OPT \
     -e DEBUG_KERNEL \
+    -e IPC_LOGGING \
     -e KPERFEVENTS \
     -e LAST_TOUCH_EVENTS \
     -e MIGT \
