@@ -24,7 +24,7 @@ git clone https://github.com/UtsavBalar1231/Anykernel3 --depth=1 -b kona anykern
 # Clone compiler
 if [[ "$@" =~ "aosp-clang"* ]]; then
 	git clone https://android.googlesource.com/platform/prebuilts/gas/linux-x86/ -b master --depth=1 gas
-	git clone https://gitlab.com/reinazhard/aosp-clang -b master --depth=1 clang
+	git clone https://github.com/aliciahouse/aosp-clang -b master --depth=1 clang
 else
 	git clone https://github.com/kdrag0n/proton-clang -b master --depth=1 clang
 fi
