@@ -53,11 +53,17 @@ MESSAGE="$AUTHOR: $REF$KERNEL_LINK/commit/$COMMIT"
 # Set our directory
 OUT_DIR=out/
 
+if [[-f ${HOME}/clang/AndroidVersion.txt ]]; then
+	CLANG_VERSION=$(cat ${HOME}/clang/AndroidVersion.txt | head -1)
+else
+	CLANG_VERSION=""
+fi
+
 # Set Compiler
 if [[ "$@" =~ "aosp-clang"* ]]; then
-	COMPILER="AOSP Clang 14.0.4"
+	COMPILER="AOSP Clang ${CLANG_VERSION}"
 else
-	COMPILER="Proton Clang 13.0.0"
+	COMPILER="Proton Clang ${CLANG_VERSION}"
 fi
 
 # Get reference string
