@@ -53,7 +53,7 @@ MESSAGE="$AUTHOR: $REF$KERNEL_LINK/commit/$COMMIT"
 # Set our directory
 OUT_DIR=out/
 
-if [[-f ${HOME}/clang/AndroidVersion.txt ]]; then
+if [[ -f ${HOME}/clang/AndroidVersion.txt ]]; then
 	CLANG_VERSION=$(cat ${HOME}/clang/AndroidVersion.txt | head -1)
 else
 	CLANG_VERSION=""
