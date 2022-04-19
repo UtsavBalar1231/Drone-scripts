@@ -193,11 +193,22 @@ else
 	PATH=${HOME}/clang/bin/:$PATH
 fi
 
-# Enable LTO
-if [[ "$@" =~ "lto"* ]]; then
+function enable_lto()
+{
     echo "CONFIG_LTO_CLANG=y" >> arch/arm64/configs/"${DEVICE}"_defconfig
     echo "CONFIG_THINLTO=n" >> arch/arm64/configs/"${DEVICE}"_defconfig
     echo "CONFIG_TOOLS_SUPPORT_RELR=y" >> arch/arm64/configs/"${DEVICE}"_defconfig
+}
+
+function disable_lto()
+{
+    echo "CONFIG_LTO_CLANG=n" >> arch/arm64/configs/"${DEVICE}"_defconfig
+    echo "CONFIG_TOOLS_SUPPORT_RELR=n" >> arch/arm64/configs/"${DEVICE}"_defconfig
+}
+
+# Enable LTO
+if [[ "$@" =~ "lto"* ]]; then
+    enable_lto
 fi
 
 # Make defconfig
@@ -224,6 +235,10 @@ cp ${OUT_DIR}/arch/arm64/boot/dtbo.img anykernel/kernels/$os
 
 # MIUI Build
 os=miui
+
+# FIXME: disable LTO on MIUI
+disable_lto
+
 scripts/config --file ${OUT_DIR}/.config \
     -d LOCALVERSION_AUTO \
     -d TOUCHSCREEN_COMMON \
