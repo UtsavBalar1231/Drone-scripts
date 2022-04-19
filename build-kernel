@@ -239,6 +239,9 @@ os=miui
 # FIXME: disable LTO on MIUI
 disable_lto
 
+# Make defconfig
+make -j${KEBABS} ${ARGS} "${DEVICE}"_defconfig
+
 scripts/config --file ${OUT_DIR}/.config \
     -d LOCALVERSION_AUTO \
     -d TOUCHSCREEN_COMMON \
@@ -286,6 +289,11 @@ git checkout arch/arm64/boot/dts/vendor &> /dev/null
 
 # AOSPA Build
 os=aospa
+
+# Enable LTO
+if [[ "$@" =~ "lto"* ]]; then
+    enable_lto
+fi
 
 # Make defconfig
 make -j${KEBABS} ${ARGS} "${DEVICE}"_defconfig
