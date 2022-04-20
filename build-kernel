@@ -216,13 +216,13 @@ else
 	PATH=${HOME}/clang/bin/:$PATH
 fi
 
+# Make defconfig
+make -j${KEBABS} ${ARGS} "${DEVICE}"_defconfig
+
 # Enable LTO
 if [[ "$@" =~ "lto"* ]]; then
     enable_lto
 fi
-
-# Make defconfig
-make -j${KEBABS} ${ARGS} "${DEVICE}"_defconfig
 
 # AOSP Build
 echo "------ Stating AOSP Build ------"
@@ -250,11 +250,6 @@ echo "------ Finishing AOSP Build ------"
 echo "------ Starting MIUI Build ------"
 os=miui
 
-# FIXME: disable LTO on MIUI
-if [[ "$@" =~ "lto"* ]]; then
-    disable_lto
-fi
-
 # Make defconfig
 make -j${KEBABS} ${ARGS} "${DEVICE}"_defconfig
 
@@ -276,6 +271,11 @@ scripts/config --file ${OUT_DIR}/.config \
     -e MI_RECLAIM \
     -e PERF_HUMANTASK \
     -e TASK_DELAY_ACCT
+
+# FIXME: disable LTO on MIUI
+if [[ "$@" =~ "lto"* ]]; then
+    disable_lto
+fi
 
 # Make olddefconfig
 cd ${OUT_DIR} || exit
@@ -313,17 +313,17 @@ echo "------ Finishing MIUI Build ------"
 echo "------ Starting AOSPA Build ------"
 os=aospa
 
-# Enable LTO
-if [[ "$@" =~ "lto"* ]]; then
-    enable_lto
-fi
-
 # Make defconfig
 make -j${KEBABS} ${ARGS} "${DEVICE}"_defconfig
 
 scripts/config --file ${OUT_DIR}/.config \
     -d SDCARD_FS \
     -e UNICODE
+
+# Enable LTO
+if [[ "$@" =~ "lto"* ]]; then
+    enable_lto
+fi
 
 # Make olddefconfig
 cd ${OUT_DIR} || exit
