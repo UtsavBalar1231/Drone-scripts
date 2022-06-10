@@ -228,11 +228,6 @@ function disable_lto() {
         scripts/config --file ${OUT_DIR}/.config \
             -d LTO_CLANG
     fi
-
-    # Make olddefconfig
-    cd ${OUT_DIR} || exit
-    make -j${KEBABS} ${ARGS} olddefconfig
-    cd ../ || exit
 }
 
 START=$(date +"%s")
@@ -252,18 +247,25 @@ fi
 # Make defconfig
 make -j${KEBABS} ${ARGS} "${DEVICE}"_defconfig
 
-# Enable LTO
+# AOSP Build
+echo "------ Stating AOSP Build ------"
+os=aosp
+
 if [[ "$@" =~ "lto"* ]]; then
+    # Enable LTO
     if [[ "$@" =~ "gcc"* ]]; then
         enable_lto gcc
     else
         enable_lto clang
     fi
+
+    # Make olddefconfig
+    cd ${OUT_DIR} || exit
+    make -j${KEBABS} ${ARGS} olddefconfig
+    cd ../ || exit
+
 fi
 
-# AOSP Build
-echo "------ Stating AOSP Build ------"
-os=aosp
 make -j${KEBABS} ${ARGS} 2>&1 | tee build.log
 find ${OUT_DIR}/$dts_source -name '*.dtb' -exec cat {} + >${OUT_DIR}/arch/arm64/boot/dtb
 
@@ -309,15 +311,12 @@ scripts/config --file ${OUT_DIR}/.config \
     -e PERF_HUMANTASK \
     -e TASK_DELAY_ACCT
 
-# FIXME: disable LTO on MIUI
 if [[ "$@" =~ "lto"* ]]; then
     if [[ "$@" =~ "gcc"* ]]; then
-        disable_lto gcc
-    else
-        disable_lto clang
+        # Enable GCC LTO
+        enable_lto gcc
     fi
 fi
-
 # Make olddefconfig
 cd ${OUT_DIR} || exit
 make -j${KEBABS} ${ARGS} olddefconfig
@@ -360,9 +359,13 @@ scripts/config --file ${OUT_DIR}/.config \
     -d SDCARD_FS \
     -e UNICODE
 
-# Enable LTO
 if [[ "$@" =~ "lto"* ]]; then
-    enable_lto
+    # Enable LTO
+    if [[ "$@" =~ "gcc"* ]]; then
+        enable_lto gcc
+    else
+        enable_lto clang
+    fi
 fi
 
 # Make olddefconfig
