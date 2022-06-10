@@ -241,7 +241,7 @@ tg_post_msg
 
 # Set compiler Path
 if [[ "$@" =~ "gcc"* ]]; then
-    PATH=${HOME}/gcc-arm64/bin:${HOME}/gcc-arm/bin:${PATH}
+    PATH=${HOME}/gcc64/bin:${HOME}/gcc32/bin:${PATH}
 elif [[ "$@" =~ "aosp-clang"* ]]; then
     PATH=${HOME}/gas:${HOME}/clang/bin/:$PATH
     export LD_LIBRARY_PATH=${HOME}/clang/lib64:${LD_LIBRARY_PATH}
