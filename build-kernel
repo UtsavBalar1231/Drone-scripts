@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2199
+# shellcheck disable=SC2086
 # shellcheck source=/dev/null
 #
 # Copyright (C) 2020-22 UtsavBalar1231 <utsavbalar1231@gmail.com>
@@ -20,8 +21,14 @@ cd /drone/src/ || exit
 
 HOME="/drone/src"
 
-KBUILD_COMPILER_STRING=$(${HOME}/clang/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
-KBUILD_LINKER_STRING=$(${HOME}/clang/bin/ld.lld --version  | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//' | sed 's/(compatible with [^)]*)//')
+if [[ "$@" =~ "gcc"* ]]; then
+    KBUILD_COMPILER_STRING=$(${HOME}/gcc64/bin/aarch64-elf-gcc --version | head -n1 | sed -e 's/aarch64-elf-gcc\ //' | perl -pe 's/\(//gs' | perl -pe 's/\)//gs')
+    KBUILD_LINKER_STRING=$(${HOME}/gcc64/bin/aarch64-elf-ld --version | head -n1 | perl -pe 's/\(//gs' | perl -pe 's/\)//gs')
+else
+    KBUILD_COMPILER_STRING=$(${HOME}/clang/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
+    KBUILD_LINKER_STRING=$(${HOME}/clang/bin/ld.lld --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//' | sed 's/(compatible with [^)]*)//')
+fi
+
 export KBUILD_COMPILER_STRING
 export KBUILD_LINKER_STRING
 
@@ -53,23 +60,31 @@ MESSAGE="$AUTHOR: $REF$KERNEL_LINK/commit/$COMMIT"
 # Set our directory
 OUT_DIR=out/
 
-if [[ -f ${HOME}/clang/AndroidVersion.txt ]]; then
-    CLANG_VERSION=$(cat ${HOME}/clang/AndroidVersion.txt | head -1)
+if [[ "$@" =~ "gcc"* ]]; then
+    VERSION=$(echo "${KBUILD_COMPILER_STRING}" | awk '{print $1,$2,$3}')
+elif [[ "$@" =~ "aosp-clang"* ]]; then
+    if [[ -f ${HOME}/clang/AndroidVersion.txt ]]; then
+        VERSION=$(cat ${HOME}/clang/AndroidVersion.txt | head -1)
+    fi
 else
-    CLANG_VERSION=""
+    VERSION=""
 fi
+export VERSION
 
 # Set Compiler
-if [[ "$@" =~ "aosp-clang"* ]]; then
-    COMPILER="AOSP Clang ${CLANG_VERSION}"
+if [[ "$@" =~ "gcc"* ]]; then
+    COMPILER=${VERSION}
+elif [[ "$@" =~ "aosp-clang"* ]]; then
+    COMPILER="AOSP Clang ${VERSION}"
 else
-    COMPILER="Proton Clang ${CLANG_VERSION}"
+    COMPILER="Proton Clang ${VERSION}"
 fi
+export COMPILER
 
 # Get reference string
-REF=$(echo "$BRANCH" | grep -Eo "[^ /]+\$")
+REF=$(echo "${BRANCH}" | grep -Eo "[^ /]+\$")
 
-CSUM=$(cksum <<< ${COMMIT} | cut -f 1 -d ' ')
+CSUM=$(cksum <<<${COMMIT} | cut -f 1 -d ' ')
 
 # Select LTO or non LTO builds
 if [[ "$@" =~ "lto"* ]]; then
@@ -87,18 +102,27 @@ if [[ -z "${KEBABS}" ]]; then
     export KEBABS="$((COUNT * 2))"
 fi
 
-ARGS="ARCH=arm64 \
-O=${OUT_DIR} \
-LLVM=1 \
-CLANG_TRIPLE=aarch64-linux-gnu- \
-CROSS_COMPILE=aarch64-linux-gnu- \
-CROSS_COMPILE_COMPAT=arm-linux-gnueabi- \
--j${KEBABS}"
+if [[ "$@" =~ "gcc"* ]]; then
+    ARGS="ARCH=arm64 \
+    O=${OUT_DIR} \
+    CROSS_COMPILE=aarch64-elf- \
+    CROSS_COMPILE_COMPAT=arm-eabi- \
+    -j${KEBABS}
+    "
+else
+    ARGS="ARCH=arm64 \
+    O=${OUT_DIR} \
+    LLVM=1 \
+    CLANG_TRIPLE=aarch64-linux-gnu- \
+    CROSS_COMPILE=aarch64-linux-gnu- \
+    CROSS_COMPILE_COMPAT=arm-linux-gnueabi- \
+    -j${KEBABS}
+"
+fi
 
 dts_source=arch/arm64/boot/dts/vendor/qcom
 # Correct panel dimensions on MIUI builds
-function miui_fix_dimens()
-{
+function miui_fix_dimens() {
     sed -i 's/<70>/<695>/g' $dts_source/dsi-panel-j3s-37-02-0a-dsc-video.dtsi
     sed -i 's/<70>/<695>/g' $dts_source/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
     sed -i 's/<70>/<695>/g' $dts_source/dsi-panel-k11a-38-08-0a-dsc-cmd.dtsi
@@ -112,17 +136,15 @@ function miui_fix_dimens()
 }
 
 # Enable back mi smartfps while disabling qsync min refresh-rate
-function miui_fix_fps()
-{
-    sed -i 's/qcom,mdss-dsi-qsync-min-refresh-rate/\/\/qcom,mdss-dsi-qsync-min-refresh-rate/g'  $dts_source/dsi-panel*
+function miui_fix_fps() {
+    sed -i 's/qcom,mdss-dsi-qsync-min-refresh-rate/\/\/qcom,mdss-dsi-qsync-min-refresh-rate/g' $dts_source/dsi-panel*
     sed -i 's/\/\/ mi,mdss-dsi-smart-fps-max_framerate/mi,mdss-dsi-smart-fps-max_framerate/g' $dts_source/dsi-panel*
     sed -i 's/\/\/ mi,mdss-dsi-pan-enable-smart-fps/mi,mdss-dsi-pan-enable-smart-fps/g' $dts_source/dsi-panel*
     sed -i 's/\/\/ qcom,mdss-dsi-pan-enable-smart-fps/qcom,mdss-dsi-pan-enable-smart-fps/g' $dts_source/dsi-panel*
 }
 
 # Enable back refresh rates supported on MIUI
-function miui_fix_dfps()
-{
+function miui_fix_dfps() {
     sed -i 's/120 90 60/120 90 60 50 30/g' $dts_source/dsi-panel-g7a-37-02-0a-dsc-video.dtsi
     sed -i 's/120 90 60/120 90 60 50 30/g' $dts_source/dsi-panel-g7a-37-02-0b-dsc-video.dtsi
     sed -i 's/120 90 60/120 90 60 50 30/g' $dts_source/dsi-panel-g7a-36-02-0c-dsc-video.dtsi
@@ -130,8 +152,7 @@ function miui_fix_dfps()
 }
 
 # Enable back brightness control from dtsi
-function miui_fix_fod()
-{
+function miui_fix_fod() {
     sed -i 's/\/\/39 01 00 00 01 00 03 51 03 FF/39 01 00 00 01 00 03 51 03 FF/g' $dts_source/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
     sed -i 's/\/\/39 01 00 00 00 00 03 51 03 FF/39 01 00 00 00 00 03 51 03 FF/g' $dts_source/dsi-panel-j11-38-08-0a-fhd-cmd.dtsi
     sed -i 's/\/\/39 00 00 00 00 00 05 51 0F 8F 00 00/39 00 00 00 00 00 05 51 0F 8F 00 00/g' $dts_source/dsi-panel-j1s-42-02-0a-dsc-cmd.dtsi
@@ -159,8 +180,7 @@ function miui_fix_fod()
 }
 
 # Post to CI channel
-function tg_post_msg()
-{
+function tg_post_msg() {
     curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendAnimation -d animation="https://media.giphy.com/media/PPgZCwZPKrLcw75EG1/giphy.gif" -d chat_id="${CI_CHANNEL_ID}"
     curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="<code>IMMENSITY Automated build</code>
 <b>BUILD TYPE</b> : <code>${TYPE}</code>
@@ -175,17 +195,22 @@ function tg_post_msg()
     curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Build started for revision ${DRONE_BUILD_NUMBER}" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
 }
 
-function tg_post_error()
-{
+function tg_post_error() {
     curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Error in $1 build!!" -d chat_id="${CI_CHANNEL_ID}"
     curl -F chat_id="${CI_CHANNEL_ID}" -F document=@"$(pwd)/build.log" https://api.telegram.org/bot"${BOT_API_KEY}"/sendDocument
-    exit 1;
+    exit 1
 }
 
-function enable_lto()
-{
-    scripts/config --file ${OUT_DIR}/.config \
-        -e LTO_CLANG
+function enable_lto() {
+    if [ "$1" == "gcc" ]; then
+        scripts/config --file ${OUT_DIR}/.config \
+            -e LTO_GCC \
+            -e LD_DEAD_CODE_DATA_ELIMINATION \
+            -d MODVERSIONS
+    else
+        scripts/config --file ${OUT_DIR}/.config \
+            -e LTO_CLANG
+    fi
 
     # Make olddefconfig
     cd ${OUT_DIR} || exit
@@ -193,10 +218,16 @@ function enable_lto()
     cd ../ || exit
 }
 
-function disable_lto()
-{
-    scripts/config --file ${OUT_DIR}/.config \
-        -d LTO_CLANG
+function disable_lto() {
+    if [ "$1" == "gcc" ]; then
+        scripts/config --file ${OUT_DIR}/.config \
+            -d LTO_GCC \
+            -d LD_DEAD_CODE_DATA_ELIMINATION \
+            -e MODVERSIONS
+    else
+        scripts/config --file ${OUT_DIR}/.config \
+            -d LTO_CLANG
+    fi
 
     # Make olddefconfig
     cd ${OUT_DIR} || exit
@@ -209,11 +240,13 @@ START=$(date +"%s")
 tg_post_msg
 
 # Set compiler Path
-if [[ "$@" =~ "aosp-clang"* ]]; then
-	PATH=${HOME}/gas:${HOME}/clang/bin/:$PATH
-	export LD_LIBRARY_PATH=${HOME}/clang/lib64:$LD_LIBRARY_PATH
+if [[ "$@" =~ "gcc"* ]]; then
+    PATH=${HOME}/gcc-arm64/bin:${HOME}/gcc-arm/bin:${PATH}
+elif [[ "$@" =~ "aosp-clang"* ]]; then
+    PATH=${HOME}/gas:${HOME}/clang/bin/:$PATH
+    export LD_LIBRARY_PATH=${HOME}/clang/lib64:${LD_LIBRARY_PATH}
 else
-	PATH=${HOME}/clang/bin/:$PATH
+    PATH=${HOME}/clang/bin/:${PATH}
 fi
 
 # Make defconfig
@@ -221,30 +254,33 @@ make -j${KEBABS} ${ARGS} "${DEVICE}"_defconfig
 
 # Enable LTO
 if [[ "$@" =~ "lto"* ]]; then
-    enable_lto
+    if [[ "$@" =~ "gcc"* ]]; then
+        enable_lto gcc
+    else
+        enable_lto clang
+    fi
 fi
 
 # AOSP Build
 echo "------ Stating AOSP Build ------"
 os=aosp
 make -j${KEBABS} ${ARGS} 2>&1 | tee build.log
-find ${OUT_DIR}/$dts_source -name '*.dtb' -exec cat {} + > ${OUT_DIR}/arch/arm64/boot/dtb
+find ${OUT_DIR}/$dts_source -name '*.dtb' -exec cat {} + >${OUT_DIR}/arch/arm64/boot/dtb
 
 mkdir -p anykernel/kernels/$os
 # Import Anykernel3 folder
 if [[ -f ${OUT_DIR}/arch/arm64/boot/Image.gz ]]; then
     cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/kernels/$os
 else
-  if [[ -f ${OUT_DIR}/arch/arm64/boot/Image ]]; then
-      cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/kernels/$os
-  else
-      tg_post_error aosp
-  fi
+    if [[ -f ${OUT_DIR}/arch/arm64/boot/Image ]]; then
+        cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/kernels/$os
+    else
+        tg_post_error aosp
+    fi
 fi
 cp ${OUT_DIR}/arch/arm64/boot/dtb anykernel/kernels/$os
 cp ${OUT_DIR}/arch/arm64/boot/dtbo.img anykernel/kernels/$os
 echo "------ Finishing AOSP Build ------"
-
 
 # MIUI Build
 echo "------ Starting MIUI Build ------"
@@ -269,12 +305,17 @@ scripts/config --file ${OUT_DIR}/.config \
     -e MIUI_DRM_WAKE_OPT \
     -e MIUI_ZRAM_MEMORY_TRACKING \
     -e MI_RECLAIM \
+    -d OSSFOD \
     -e PERF_HUMANTASK \
     -e TASK_DELAY_ACCT
 
 # FIXME: disable LTO on MIUI
 if [[ "$@" =~ "lto"* ]]; then
-    disable_lto
+    if [[ "$@" =~ "gcc"* ]]; then
+        disable_lto gcc
+    else
+        disable_lto clang
+    fi
 fi
 
 # Make olddefconfig
@@ -289,25 +330,24 @@ miui_fix_fod
 
 make -j${KEBABS} ${ARGS} 2>&1 | tee build.log
 
-find ${OUT_DIR}/$dts_source -name '*.dtb' -exec cat {} + > ${OUT_DIR}/arch/arm64/boot/dtb
+find ${OUT_DIR}/$dts_source -name '*.dtb' -exec cat {} + >${OUT_DIR}/arch/arm64/boot/dtb
 
 mkdir -p anykernel/kernels/$os
 # Import Anykernel3 folder
 if [[ -f ${OUT_DIR}/arch/arm64/boot/Image.gz ]]; then
     cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/kernels/$os
 else
-  if [[ -f ${OUT_DIR}/arch/arm64/boot/Image ]]; then
-      cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/kernels/$os
-  else
-      tg_post_error miui
-  fi
+    if [[ -f ${OUT_DIR}/arch/arm64/boot/Image ]]; then
+        cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/kernels/$os
+    else
+        tg_post_error miui
+    fi
 fi
 cp ${OUT_DIR}/arch/arm64/boot/dtb anykernel/kernels/$os
 cp ${OUT_DIR}/arch/arm64/boot/dtbo.img anykernel/kernels/$os
 
-git checkout arch/arm64/boot/dts/vendor &> /dev/null
+git checkout arch/arm64/boot/dts/vendor &>/dev/null
 echo "------ Finishing MIUI Build ------"
-
 
 # AOSPA Build
 echo "------ Starting AOSPA Build ------"
@@ -332,23 +372,22 @@ cd ../ || exit
 
 make -j${KEBABS} ${ARGS} 2>&1 | tee build.log
 
-find ${OUT_DIR}/$dts_source -name '*.dtb' -exec cat {} + > ${OUT_DIR}/arch/arm64/boot/dtb
+find ${OUT_DIR}/$dts_source -name '*.dtb' -exec cat {} + >${OUT_DIR}/arch/arm64/boot/dtb
 
 mkdir -p anykernel/kernels/$os
 # Import Anykernel3 folder
 if [[ -f ${OUT_DIR}/arch/arm64/boot/Image.gz ]]; then
     cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/kernels/$os
 else
-  if [[ -f ${OUT_DIR}/arch/arm64/boot/Image ]]; then
-      cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/kernels/$os
-  else
-      tg_post_error aospa
-  fi
+    if [[ -f ${OUT_DIR}/arch/arm64/boot/Image ]]; then
+        cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/kernels/$os
+    else
+        tg_post_error aospa
+    fi
 fi
 cp ${OUT_DIR}/arch/arm64/boot/dtb anykernel/kernels/$os
 cp ${OUT_DIR}/arch/arm64/boot/dtbo.img anykernel/kernels/$os
 echo "------ Finishing AOSPA Build ------"
-
 
 END=$(date +"%s")
 DIFF=$((END - START))
@@ -357,9 +396,9 @@ cd anykernel || exit
 zip -r9 "${ZIPNAME}" ./* -x .git .gitignore ./*.zip
 
 RESPONSE=$(curl -# -F "name=${ZIPNAME}" -F "file=@${ZIPNAME}" -u :"${PD_API_KEY}" https://pixeldrain.com/api/file)
-FILEID=$(echo $RESPONSE | grep -Po '(?<="id":")[^"]*')
+FILEID=$(echo "${RESPONSE}" | grep -Po '(?<="id":")[^"]*')
 
-CHECKER=$(find ./ -maxdepth 1 -type f -name ${ZIPNAME} -printf "%s\n")
+CHECKER=$(find ./ -maxdepth 1 -type f -name "${ZIPNAME}" -printf "%s\n")
 if (($((CHECKER / 1048576)) > 5)); then
     curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="✅ Kernel compiled successfully in $((DIFF / 60)) minute(s) and $((DIFF % 60)) seconds for ${DEVICE}" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
     curl -s -X POST https://api.telegram.org/bot"${BOT_API_KEY}"/sendMessage -d text="Kernel build link: https://pixeldrain.com/u/$FILEID" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
@@ -367,7 +406,7 @@ if (($((CHECKER / 1048576)) > 5)); then
 else
     tg_post_error
 fi
-cd $(pwd) || exit
+cd "$(pwd)" || exit
 
 # Cleanup
 rm -fr anykernel/
