@@ -230,6 +230,26 @@ function disable_lto() {
     fi
 }
 
+function pack_image_build() {
+    mkdir -p anykernel/kernels/$1
+
+    # Check if the kernel is built
+    if [[ -f ${OUT_DIR}/System.map ]]; then
+        if [[ -f ${OUT_DIR}/arch/arm64/boot/Image.gz ]]; then
+            cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/kernels/$1
+        elif [[ -f ${OUT_DIR}/arch/arm64/boot/Image ]]; then
+            cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/kernels/$1
+        else
+            tg_post_error $1
+        fi
+    else
+        tg_post_error $1
+    fi
+
+    cp ${OUT_DIR}/arch/arm64/boot/dtb anykernel/kernels/$1
+    cp ${OUT_DIR}/arch/arm64/boot/dtbo.img anykernel/kernels/$1
+}
+
 START=$(date +"%s")
 
 tg_post_msg
@@ -249,7 +269,7 @@ make -j${KEBABS} ${ARGS} "${DEVICE}"_defconfig
 
 # AOSP Build
 echo "------ Stating AOSP Build ------"
-os=aosp
+OS=aosp
 
 if [[ "$@" =~ "lto"* ]]; then
     # Enable LTO
@@ -269,24 +289,12 @@ fi
 make -j${KEBABS} ${ARGS} 2>&1 | tee build.log
 find ${OUT_DIR}/$dts_source -name '*.dtb' -exec cat {} + >${OUT_DIR}/arch/arm64/boot/dtb
 
-mkdir -p anykernel/kernels/$os
-# Import Anykernel3 folder
-if [[ -f ${OUT_DIR}/arch/arm64/boot/Image.gz ]]; then
-    cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/kernels/$os
-else
-    if [[ -f ${OUT_DIR}/arch/arm64/boot/Image ]]; then
-        cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/kernels/$os
-    else
-        tg_post_error aosp
-    fi
-fi
-cp ${OUT_DIR}/arch/arm64/boot/dtb anykernel/kernels/$os
-cp ${OUT_DIR}/arch/arm64/boot/dtbo.img anykernel/kernels/$os
+pack_image_build ${OS}
 echo "------ Finishing AOSP Build ------"
 
 # MIUI Build
 echo "------ Starting MIUI Build ------"
-os=miui
+OS=miui
 
 # Make defconfig
 make -j${KEBABS} ${ARGS} "${DEVICE}"_defconfig
@@ -331,26 +339,14 @@ make -j${KEBABS} ${ARGS} 2>&1 | tee build.log
 
 find ${OUT_DIR}/$dts_source -name '*.dtb' -exec cat {} + >${OUT_DIR}/arch/arm64/boot/dtb
 
-mkdir -p anykernel/kernels/$os
-# Import Anykernel3 folder
-if [[ -f ${OUT_DIR}/arch/arm64/boot/Image.gz ]]; then
-    cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/kernels/$os
-else
-    if [[ -f ${OUT_DIR}/arch/arm64/boot/Image ]]; then
-        cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/kernels/$os
-    else
-        tg_post_error miui
-    fi
-fi
-cp ${OUT_DIR}/arch/arm64/boot/dtb anykernel/kernels/$os
-cp ${OUT_DIR}/arch/arm64/boot/dtbo.img anykernel/kernels/$os
+pack_image_build ${OS}
 
 git checkout arch/arm64/boot/dts/vendor &>/dev/null
 echo "------ Finishing MIUI Build ------"
 
 # AOSPA Build
 echo "------ Starting AOSPA Build ------"
-os=aospa
+OS=aospa
 
 # Make defconfig
 make -j${KEBABS} ${ARGS} "${DEVICE}"_defconfig
@@ -377,19 +373,7 @@ make -j${KEBABS} ${ARGS} 2>&1 | tee build.log
 
 find ${OUT_DIR}/$dts_source -name '*.dtb' -exec cat {} + >${OUT_DIR}/arch/arm64/boot/dtb
 
-mkdir -p anykernel/kernels/$os
-# Import Anykernel3 folder
-if [[ -f ${OUT_DIR}/arch/arm64/boot/Image.gz ]]; then
-    cp ${OUT_DIR}/arch/arm64/boot/Image.gz anykernel/kernels/$os
-else
-    if [[ -f ${OUT_DIR}/arch/arm64/boot/Image ]]; then
-        cp ${OUT_DIR}/arch/arm64/boot/Image anykernel/kernels/$os
-    else
-        tg_post_error aospa
-    fi
-fi
-cp ${OUT_DIR}/arch/arm64/boot/dtb anykernel/kernels/$os
-cp ${OUT_DIR}/arch/arm64/boot/dtbo.img anykernel/kernels/$os
+pack_image_build ${OS}
 echo "------ Finishing AOSPA Build ------"
 
 END=$(date +"%s")
