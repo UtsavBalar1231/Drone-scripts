@@ -311,7 +311,7 @@ scripts/config --file ${OUT_DIR}/.config \
     -e MIGT \
     -e MIHW \
     -e MILLET \
-    -e MIUI_DRM_WAKE_OPT \
+    -e MI_DRM_OPT \
     -e MIUI_ZRAM_MEMORY_TRACKING \
     -e MI_RECLAIM \
     -d OSSFOD \
