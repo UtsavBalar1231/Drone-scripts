@@ -17,9 +17,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-cd /drone/src/ || exit
 
-HOME="/drone/src"
+HOME="/root/project/build/"
 
 if [[ "$@" =~ "gcc"* ]]; then
     KBUILD_COMPILER_STRING=$(${HOME}/gcc64/bin/aarch64-elf-gcc --version | head -n1 | sed -e 's/aarch64-elf-gcc\ //' | perl -pe 's/\(//gs' | perl -pe 's/\)//gs')
@@ -31,6 +30,8 @@ fi
 
 export KBUILD_COMPILER_STRING
 export KBUILD_LINKER_STRING
+
+cd ${HOME}/kernel
 
 #
 # Enviromental Variables
@@ -179,8 +180,7 @@ function tg_post_msg() {
 <b>COMPILER</b> : <code>${COMPILER}</code>
 <b>KERNEL VERSION</b> : <code>${KERNELVER}</code>
 
-<i>Build started on Drone Cloud!</i>
-<a href='https://cloud.drone.io/UtsavBalar1231/kernel_xiaomi_sm8250/${DRONE_BUILD_NUMBER}'>Check the build status here</a>" -d chat_id="${CI_CHANNEL_ID}" -d parse_mode=HTML
+<i>Build started on CircleCI!</i>"
 }
 
 function tg_post_error() {
